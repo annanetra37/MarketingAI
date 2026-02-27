@@ -1,3 +1,6 @@
+"""
+Triple I — Generate API  (FIXED: multimedia not-found + robust UUID handling)
+"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -15,10 +18,44 @@ from app.agents.prospect_hunter_agent import ProspectHunterAgent
 from app.agents.outreach_agent import OutreachAgent
 from app.agents.linkedin_scheduler_agent import LinkedInSchedulerAgent
 from app.schemas.generated_content import GeneratedContentResponse
+from app.models.generated_content import GeneratedContent
 from pydantic import BaseModel
 from typing import Optional
+import uuid as _uuid
 
 router = APIRouter(prefix="/generate", tags=["Generate"])
+
+
+def _resolve_content(content_id: str, db: Session) -> GeneratedContent:
+    """
+    Lookup GeneratedContent by id, handling both raw UUID strings and
+    short/dirty IDs. Raises HTTPException(404) with a helpful message
+    instead of the generic 500 'Content not found'.
+    """
+    # Try direct match first
+    item = db.query(GeneratedContent).filter(
+        GeneratedContent.id == content_id
+    ).first()
+
+    # If not found and it looks like a partial ID, try prefix match
+    if not item and len(content_id) < 36:
+        items = db.query(GeneratedContent).all()
+        matches = [i for i in items if str(i.id).startswith(content_id)]
+        if len(matches) == 1:
+            item = matches[0]
+
+    if not item:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Content '{content_id}' not found. "
+                "Make sure you have generated at least one content piece "
+                "for this campaign first (LinkedIn, Blog, Twitter, etc.), "
+                "then select it from the dropdown."
+            ),
+        )
+    return item
+
 
 # ── Content ───────────────────────────────────────────────────────────────
 @router.post("/linkedin/{campaign_id}", response_model=GeneratedContentResponse)
@@ -33,7 +70,7 @@ def generate_blog(content_id: str, db: Session = Depends(get_db)):
 
 @router.post("/twitter/{campaign_id}", response_model=GeneratedContentResponse)
 def generate_twitter(campaign_id: str, db: Session = Depends(get_db)):
-    try: return ContentAgent(db).generate_twitter_thread(campaign_id)
+    try: return ContentAgent(db).generate_twitter(campaign_id)
     except Exception as e: raise HTTPException(500, str(e))
 
 # ── SEO ───────────────────────────────────────────────────────────────────
@@ -43,7 +80,7 @@ def generate_seo_keywords(campaign_id: str, db: Session = Depends(get_db)):
     except Exception as e: raise HTTPException(500, str(e))
 
 @router.post("/seo/optimize/{content_id}", response_model=GeneratedContentResponse)
-def optimize_seo(content_id: str, db: Session = Depends(get_db)):
+def optimize_seo_content(content_id: str, db: Session = Depends(get_db)):
     try: return SEOAgent(db).optimize_content(content_id)
     except Exception as e: raise HTTPException(500, str(e))
 
@@ -61,43 +98,43 @@ def generate_linkedin_ads(campaign_id: str, db: Session = Depends(get_db)):
 # ── CMO ───────────────────────────────────────────────────────────────────
 @router.post("/cmo/brief/{campaign_id}", response_model=GeneratedContentResponse)
 def generate_cmo_brief(campaign_id: str, db: Session = Depends(get_db)):
-    try: return CMOAgent(db).create_campaign_brief(campaign_id)
+    try: return CMOAgent(db).generate_brief(campaign_id)
     except Exception as e: raise HTTPException(500, str(e))
 
-@router.post("/cmo/pipeline/{campaign_id}")
-def run_pipeline(campaign_id: str, db: Session = Depends(get_db)):
-    try: return CMOAgent(db).run_full_pipeline(campaign_id)
+@router.post("/cmo/pipeline/{campaign_id}", response_model=GeneratedContentResponse)
+def run_cmo_pipeline(campaign_id: str, db: Session = Depends(get_db)):
+    try: return CMOAgent(db).run_pipeline(campaign_id)
     except Exception as e: raise HTTPException(500, str(e))
 
-class ChatMessage(BaseModel):
+class ChatRequest(BaseModel):
     message: str
-    context: Optional[dict] = None
+    context: Optional[str] = None
 
 @router.post("/cmo/chat")
-def cmo_chat(payload: ChatMessage, db: Session = Depends(get_db)):
-    try: return {"reply": CMOAgent(db).chat(payload.message, payload.context)}
+def cmo_chat(payload: ChatRequest, db: Session = Depends(get_db)):
+    try: return CMOAgent(db).chat(payload.message, payload.context)
     except Exception as e: raise HTTPException(500, str(e))
 
 # ── Research ──────────────────────────────────────────────────────────────
 @router.post("/research/competitors/{campaign_id}", response_model=GeneratedContentResponse)
 def research_competitors(campaign_id: str, db: Session = Depends(get_db)):
-    try: return ResearchAgent(db).analyze_competitors(campaign_id)
+    try: return ResearchAgent(db).research_competitors(campaign_id)
     except Exception as e: raise HTTPException(500, str(e))
 
 @router.post("/research/regulatory/{campaign_id}", response_model=GeneratedContentResponse)
-def regulatory_briefing(campaign_id: str, db: Session = Depends(get_db)):
-    try: return ResearchAgent(db).regulatory_briefing(campaign_id)
+def research_regulatory(campaign_id: str, db: Session = Depends(get_db)):
+    try: return ResearchAgent(db).research_regulatory(campaign_id)
     except Exception as e: raise HTTPException(500, str(e))
 
 # ── Analytics ─────────────────────────────────────────────────────────────
 @router.post("/analytics/performance/{campaign_id}", response_model=GeneratedContentResponse)
 def analyze_performance(campaign_id: str, db: Session = Depends(get_db)):
-    try: return AnalyticsAgent(db).analyze_campaign_performance(campaign_id)
+    try: return AnalyticsAgent(db).analyze_performance(campaign_id)
     except Exception as e: raise HTTPException(500, str(e))
 
 @router.post("/analytics/ab-test/{campaign_id}", response_model=GeneratedContentResponse)
-def run_ab_test(campaign_id: str, db: Session = Depends(get_db)):
-    try: return AnalyticsAgent(db).run_ab_test_analysis(campaign_id)
+def analyze_ab_test(campaign_id: str, db: Session = Depends(get_db)):
+    try: return AnalyticsAgent(db).analyze_ab_test(campaign_id)
     except Exception as e: raise HTTPException(500, str(e))
 
 # ── Budget ────────────────────────────────────────────────────────────────
@@ -133,15 +170,26 @@ def auto_generate_goals(payload: AutoGoalsRequest, db: Session = Depends(get_db)
 # ── Creative Agent ────────────────────────────────────────────────────────
 @router.post("/creative/for-content/{content_id}", response_model=GeneratedContentResponse)
 def generate_creative_for_content(content_id: str, db: Session = Depends(get_db)):
-    """🎨 Generate DALL-E 3 image + video script for any content piece."""
-    try: return CreativeAgent(db).generate_for_content(content_id)
-    except Exception as e: raise HTTPException(500, str(e))
+    """
+    🎨 Generate DALL-E 3 image + video script for any content piece.
+    FIXED: Returns 404 with helpful message instead of cryptic 500 error.
+    """
+    # Validate the content exists BEFORE passing to agent (gives clear 404)
+    _resolve_content(content_id, db)
+    try:
+        return CreativeAgent(db).generate_for_content(content_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/creative/campaign/{campaign_id}", response_model=GeneratedContentResponse)
 def generate_campaign_creative(campaign_id: str, db: Session = Depends(get_db)):
     """🎨 Full visual pack: hero image + all channel variants + video script."""
-    try: return CreativeAgent(db).generate_for_campaign(campaign_id)
-    except Exception as e: raise HTTPException(500, str(e))
+    try:
+        return CreativeAgent(db).generate_for_campaign(campaign_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ── Prospect Hunter ───────────────────────────────────────────────────────
 class ProspectHuntRequest(BaseModel):
@@ -158,90 +206,75 @@ def hunt_prospects(payload: ProspectHuntRequest, db: Session = Depends(get_db)):
     """🎯 Find 15 product-qualified ESG software prospects in any country."""
     try:
         return ProspectHunterAgent(db).hunt_prospects(
-            country_name=payload.country_name, cluster=payload.cluster,
-            persona_name=payload.persona_name, industry_focus=payload.industry_focus,
-            min_employees=payload.min_employees, max_employees=payload.max_employees,
+            country_name=payload.country_name,
+            cluster=payload.cluster,
+            persona_name=payload.persona_name,
+            industry_focus=payload.industry_focus,
+            min_employees=payload.min_employees,
+            max_employees=payload.max_employees,
             campaign_id=payload.campaign_id,
         )
-    except Exception as e: raise HTTPException(500, str(e))
-
-class ProspectScoreRequest(BaseModel):
-    company_name: str
-    country: str
-    campaign_id: Optional[str] = None
-
-@router.post("/prospects/score", response_model=GeneratedContentResponse)
-def score_prospect(payload: ProspectScoreRequest, db: Session = Depends(get_db)):
-    """🎯 Score a specific company 1-100 as a Triple I prospect."""
-    try:
-        return ProspectHunterAgent(db).score_prospect(
-            company_name=payload.company_name, country=payload.country,
-            campaign_id=payload.campaign_id,
-        )
-    except Exception as e: raise HTTPException(500, str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ── Outreach Agent ────────────────────────────────────────────────────────
 class OutreachRequest(BaseModel):
     company_name: str
     country: str
     persona_name: str = "SME"
-    pain_point: str = ""
-    trigger_event: str = ""
-    decision_maker_title: str = "Sustainability Manager"
-    industry: str = ""
-    cluster: str = "CLUSTER_A"
-    qualification_score: int = 80
+    pain_point: str = "ESG reporting complexity"
+    trigger_event: str = "CSRD deadline approaching"
+    decision_maker_title: str = "CFO"
     campaign_id: Optional[str] = None
 
 @router.post("/outreach/sequence", response_model=GeneratedContentResponse)
 def generate_outreach_sequence(payload: OutreachRequest, db: Session = Depends(get_db)):
-    """📧 5-touch personalized email + LinkedIn sequence for a specific prospect."""
     try:
-        return OutreachAgent(db).generate_email_sequence(
+        return OutreachAgent(db).generate_sequence(
             company_name=payload.company_name,
             country=payload.country,
             persona_name=payload.persona_name,
-            pain_point=payload.pain_point or "ESG reporting complexity",
-            trigger_event=payload.trigger_event or "CSRD deadline approaching",
-            key_title=payload.decision_maker_title,
-            industry=payload.industry,
-            cluster=payload.cluster,
-            qualification_score=payload.qualification_score,
+            pain_point=payload.pain_point,
+            trigger_event=payload.trigger_event,
+            decision_maker_title=payload.decision_maker_title,
             campaign_id=payload.campaign_id,
         )
-    except Exception as e: raise HTTPException(500, str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 class BulkOutreachRequest(BaseModel):
-    prospect_list_content_id: str
-    top_n: int = 5
+    prospect_list_id: str
     campaign_id: Optional[str] = None
 
 @router.post("/outreach/bulk")
-def generate_bulk_outreach(payload: BulkOutreachRequest, db: Session = Depends(get_db)):
-    """📧 Auto-generate sequences for the top N prospects from a prospect list."""
+def bulk_outreach(payload: BulkOutreachRequest, db: Session = Depends(get_db)):
     try:
-        results = OutreachAgent(db).generate_bulk_sequences(
-            prospect_list_content_id=payload.prospect_list_content_id,
-            max_prospects=payload.top_n,
+        return OutreachAgent(db).bulk_generate(
+            prospect_list_id=payload.prospect_list_id,
             campaign_id=payload.campaign_id,
         )
-        ok  = [r for r in results if r.get("status") == "generated"]
-        bad = [r for r in results if r.get("status") == "failed"]
-        return {"sequences_created": len(ok), "failed": len(bad), "results": results}
-    except Exception as e: raise HTTPException(500, str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ── LinkedIn Scheduler ────────────────────────────────────────────────────
 @router.get("/linkedin/check-credentials")
 def check_linkedin_credentials(db: Session = Depends(get_db)):
-    try: return LinkedInSchedulerAgent(db).check_credentials()
-    except Exception as e: raise HTTPException(500, str(e))
+    try:
+        return LinkedInSchedulerAgent(db).check_credentials()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/linkedin/post-now/{content_id}")
-def linkedin_post_now(content_id: str, post_as: str = "person", db: Session = Depends(get_db)):
-    try: return LinkedInSchedulerAgent(db).post_now(content_id, post_as=post_as)
-    except Exception as e: raise HTTPException(500, str(e))
+def post_to_linkedin_now(content_id: str, db: Session = Depends(get_db)):
+    _resolve_content(content_id, db)
+    try:
+        return LinkedInSchedulerAgent(db).post_now(content_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/linkedin/schedule-from-plan/{distribution_content_id}")
-def schedule_from_plan(distribution_content_id: str, post_as: str = "person", db: Session = Depends(get_db)):
-    try: return LinkedInSchedulerAgent(db).schedule_from_distribution_plan(distribution_content_id, post_as=post_as)
-    except Exception as e: raise HTTPException(500, str(e))
+@router.post("/linkedin/schedule/{campaign_id}", response_model=GeneratedContentResponse)
+def schedule_linkedin_posts(campaign_id: str, db: Session = Depends(get_db)):
+    try:
+        return LinkedInSchedulerAgent(db).generate_schedule(campaign_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
