@@ -1,0 +1,4097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triple I — Autonomous AI Marketing Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   ROOT — Design System
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:       #030305;
+  --surface:  #080810;
+  --card:     #0e0e18;
+  --card2:    #111120;
+  --border:   #1a1a2e;
+  --border2:  #25253c;
+  --border3:  #333355;
+
+  --green:    #00ff88;
+  --green2:   #00c966;
+  --gdim:     rgba(0,255,136,.08);
+  --gglow:    rgba(0,255,136,.18);
+
+  --blue:     #4488ff;
+  --bdim:     rgba(68,136,255,.08);
+  --bglow:    rgba(68,136,255,.18);
+
+  --amber:    #ffaa00;
+  --adim:     rgba(255,170,0,.08);
+  --aglow:    rgba(255,170,0,.18);
+
+  --rose:     #ff4466;
+  --rdim:     rgba(255,68,102,.08);
+  --rglow:    rgba(255,68,102,.18);
+
+  --purple:   #aa66ff;
+  --pdim:     rgba(170,102,255,.08);
+  --pglow:    rgba(170,102,255,.18);
+
+  --cyan:     #00ddff;
+  --cdim:     rgba(0,221,255,.08);
+  --cglow:    rgba(0,221,255,.18);
+
+  --orange:   #ff7700;
+  --odim:     rgba(255,119,0,.08);
+
+  --text:     #d8d8ee;
+  --text2:    #9090aa;
+  --text3:    #555570;
+  --white:    #f0f0ff;
+
+  --sidebar-w: 72px;
+  --topbar-h:  58px;
+  --radius:    10px;
+  --radius-lg: 16px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: .15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Radial glow top */
+body::after {
+  content: '';
+  position: fixed;
+  top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 600px;
+  background: radial-gradient(ellipse, rgba(0,255,136,.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════════ */
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--topbar-h) 1fr;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════════════════════ */
+.topbar {
+  grid-column: 1 / -1;
+  background: rgba(3,3,5,.92);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px 0 0;
+  gap: 0;
+  position: sticky; top: 0;
+  z-index: 200;
+}
+
+.topbar-brand {
+  width: var(--sidebar-w);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border);
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.logo-mark {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--green) 0%, var(--cyan) 100%);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: #000;
+  letter-spacing: 0;
+  position: relative;
+}
+
+.logo-mark::after {
+  content: '';
+  position: absolute; inset: -3px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  opacity: .15;
+  z-index: -1;
+}
+
+.topbar-center {
+  flex: 1;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: var(--white);
+}
+
+.topbar-sub {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: .5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.system-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.pulse {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green), 0 0 20px rgba(0,255,136,.3);
+  animation: pulse 2s infinite;
+}
+
+.pulse.idle { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.pulse.running { background: var(--blue); box-shadow: 0 0 8px var(--blue); animation: pulse-fast .6s infinite; }
+.pulse.error { background: var(--rose); box-shadow: 0 0 8px var(--rose); animation: none; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .4; transform: scale(.85); }
+}
+@keyframes pulse-fast {
+  0%, 100% { opacity: 1; transform: scale(1.1); }
+  50% { opacity: .6; transform: scale(.9); }
+}
+
+.loop-badge {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px;
+  background: var(--gdim);
+  border: 1px solid var(--gglow);
+  border-radius: 20px;
+  font-size: 10px;
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: .5px;
+}
+
+.loop-badge.running {
+  background: var(--bdim);
+  border-color: var(--bglow);
+  color: var(--blue);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════════════ */
+.sidebar {
+  background: rgba(3,3,5,.85);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+  overflow-y: auto;
+  position: sticky; top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+}
+
+.nav-item {
+  width: 48px; height: 48px;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .18s;
+  border: 1px solid transparent;
+  gap: 3px;
+  position: relative;
+}
+
+.nav-item:hover { background: var(--card); border-color: var(--border2); }
+
+.nav-item.active {
+  background: var(--gdim);
+  border-color: var(--gglow);
+}
+
+.nav-icon { font-size: 18px; line-height: 1; }
+.nav-label {
+  font-size: 8px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-item.active .nav-label { color: var(--green); }
+
+.nav-dot {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--rose);
+}
+
+.nav-divider {
+  width: 32px;
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════════════════════════ */
+.main {
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: transparent;
+}
+
+.panel {
+  display: none;
+  flex-direction: column;
+  gap: 18px;
+  animation: fadeUp .25s ease;
+}
+
+.panel.active { display: flex; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE HEADERS
+═══════════════════════════════════════════════════════════════ */
+.ph {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ph-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 2px;
+  color: var(--white);
+  line-height: 1;
+}
+
+.ph-title em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ph-sub {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════════════ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: border-color .2s;
+}
+
+.card:hover { border-color: var(--border2); }
+
+.card-sm {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.ch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ct {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORMS
+═══════════════════════════════════════════════════════════════ */
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg.full { grid-column: 1/-1; }
+
+label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
+select, input, textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+
+select:focus, input:focus, textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(0,255,136,.08);
+}
+
+select option { background: var(--surface); }
+textarea { resize: vertical; min-height: 60px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  transition: all .18s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: #000;
+  font-weight: 700;
+}
+.btn-primary:hover {
+  background: #22ffaa;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,255,136,.25);
+}
+.btn-primary:disabled {
+  background: var(--border2);
+  color: var(--text3);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-glow {
+  background: linear-gradient(135deg, var(--green) 0%, var(--cyan) 100%);
+  color: #000;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+}
+.btn-glow::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,.15) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform .4s;
+}
+.btn-glow:hover::before { transform: translateX(100%); }
+.btn-glow:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,255,136,.3); }
+
+.btn-secondary {
+  background: var(--card2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover { background: var(--border2); color: var(--white); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+
+.btn-danger {
+  background: var(--rdim);
+  color: var(--rose);
+  border: 1px solid var(--rglow);
+}
+.btn-danger:hover { background: var(--rose); color: #fff; }
+
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+.btn-xs { padding: 4px 8px; font-size: 10px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TAGS & BADGES
+═══════════════════════════════════════════════════════════════ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .3px;
+}
+
+.tg { background: var(--gdim); color: var(--green); border: 1px solid var(--gglow); }
+.tb { background: var(--bdim); color: var(--blue);  border: 1px solid var(--bglow); }
+.ta { background: var(--adim); color: var(--amber); border: 1px solid var(--aglow); }
+.tr { background: var(--rdim); color: var(--rose);  border: 1px solid var(--rglow); }
+.tp { background: var(--pdim); color: var(--purple);border: 1px solid var(--pglow); }
+.tc { background: var(--cdim); color: var(--cyan);  border: 1px solid var(--cglow); }
+.tm { background: var(--border); color: var(--text2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   METRICS GRID
+═══════════════════════════════════════════════════════════════ */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metric {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+
+.metric.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+.metric.blue::before  { background: linear-gradient(90deg, var(--blue),  transparent); }
+.metric.amber::before { background: linear-gradient(90deg, var(--amber), transparent); }
+.metric.rose::before  { background: linear-gradient(90deg, var(--rose),  transparent); }
+.metric.purple::before{ background: linear-gradient(90deg, var(--purple),transparent); }
+.metric.cyan::before  { background: linear-gradient(90deg, var(--cyan),  transparent); }
+
+.metric-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 34px;
+  letter-spacing: 1px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.metric-change {
+  font-size: 10px;
+  margin-top: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AGENT CARDS
+═══════════════════════════════════════════════════════════════ */
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.agent-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.agent-card.ag-cmo::before    { background: var(--green); }
+.agent-card.ag-cnt::before    { background: var(--blue); }
+.agent-card.ag-seo::before    { background: var(--amber); }
+.agent-card.ag-ads::before    { background: var(--rose); }
+.agent-card.ag-res::before    { background: var(--cyan); }
+.agent-card.ag-ana::before    { background: var(--purple); }
+.agent-card.ag-bud::before    { background: var(--orange); }
+.agent-card.ag-dis::before    { background: var(--green2); }
+
+.agent-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border2);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+
+.agent-status {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+.agent-status.idle { background: var(--text3); box-shadow: none; }
+.agent-status.running { background: var(--blue); box-shadow: 0 0 8px var(--blue); animation: pulse-fast .6s infinite; }
+
+.ai { font-size: 28px; margin-bottom: 10px; }
+.an { font-weight: 700; font-size: 14px; color: var(--white); margin-bottom: 4px; }
+.ad { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 12px; }
+
+.agent-last-run {
+  font-size: 9px;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTONOMOUS LOOP UI
+═══════════════════════════════════════════════════════════════ */
+.loop-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding: 20px 0 10px;
+  scrollbar-width: none;
+}
+
+.loop-step {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.ls-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  min-width: 90px;
+  transition: all .2s;
+  cursor: default;
+}
+
+.ls-node.done    { border-color: var(--gglow); background: var(--gdim); }
+.ls-node.running { border-color: var(--bglow); background: var(--bdim); animation: node-pulse 1s infinite; }
+.ls-node.error   { border-color: var(--rglow); background: var(--rdim); }
+.ls-node.pending { opacity: .4; }
+
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(68,136,255,.3); }
+  50% { box-shadow: 0 0 0 4px rgba(68,136,255,.1); }
+}
+
+.ls-icon { font-size: 18px; }
+.ls-name { font-size: 9px; letter-spacing: .5px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; text-align: center; }
+.ls-node.done .ls-name { color: var(--green); }
+.ls-node.running .ls-name { color: var(--blue); }
+.ls-node.error .ls-name { color: var(--rose); }
+
+.ls-arrow {
+  color: var(--text3);
+  font-size: 16px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.ls-arrow.done { color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════
+   LOG STREAM
+═══════════════════════════════════════════════════════════════ */
+.log-stream {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.log-entry {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.log-ts {
+  color: var(--text3);
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.log-icon { flex-shrink: 0; }
+
+.log-text { color: var(--text2); }
+.log-text.success { color: var(--green); }
+.log-text.error   { color: var(--rose); }
+.log-text.info    { color: var(--blue); }
+.log-text.warn    { color: var(--amber); }
+
+/* ═══════════════════════════════════════════════════════════════
+   OUTPUT PANELS
+═══════════════════════════════════════════════════════════════ */
+.output-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.op-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+.op-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.op-body {
+  padding: 18px;
+  min-height: 200px;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESULT BLOCKS
+═══════════════════════════════════════════════════════════════ */
+.rb {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.rb-header {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: var(--surface);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rb-body {
+  padding: 12px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.rb-body.hl {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--white);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAT
+═══════════════════════════════════════════════════════════════ */
+.chat-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-msgs {
+  padding: 18px;
+  flex: 1;
+  max-height: 400px;
+  min-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.msg { display: flex; gap: 10px; }
+.msg.user { flex-direction: row-reverse; }
+
+.msg-av {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 10px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.msg-av.bot  { background: var(--gdim); color: var(--green); border: 1px solid var(--gglow); }
+.msg-av.user { background: var(--bdim); color: var(--blue);  border: 1px solid var(--bglow); }
+
+.msg-body { max-width: 78%; }
+.msg-who {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.msg.user .msg-who { text-align: right; }
+
+.msg-text {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.msg.user .msg-text {
+  background: var(--bdim);
+  border-color: var(--bglow);
+  color: var(--blue);
+}
+
+.chat-bar {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+}
+
+.chat-input:focus { border-color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TYPING INDICATOR
+═══════════════════════════════════════════════════════════════ */
+.typing {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 18px;
+}
+
+.typing.on { display: flex; }
+
+.td {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: td 1.2s infinite;
+}
+
+.td:nth-child(2) { animation-delay: .2s; }
+.td:nth-child(3) { animation-delay: .4s; }
+
+@keyframes td {
+  0%, 80%, 100% { transform: scale(.6); opacity: .3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════════════════════════ */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tbl th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
+.tbl td {
+  padding: 9px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(255,255,255,.02); }
+
+/* ═══════════════════════════════════════════════════════════════
+   PIPELINE STEPS
+═══════════════════════════════════════════════════════════════ */
+.pipeline { display: flex; flex-direction: column; gap: 6px; }
+
+.pip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  transition: all .18s;
+}
+
+.pip:hover { border-color: var(--border2); }
+.pip.done  { border-color: var(--gglow); }
+.pip.running { border-color: var(--bglow); background: var(--bdim); }
+.pip.error { border-color: var(--rglow); }
+
+.pip-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.pip-num.done    { background: var(--gdim); border: 1px solid var(--gglow); color: var(--green); }
+.pip-num.running { background: var(--bdim); border: 1px solid var(--bglow); color: var(--blue); }
+.pip-num.error   { background: var(--rdim); border: 1px solid var(--rglow); color: var(--rose); }
+.pip-num.pending { background: var(--border); color: var(--text3); }
+
+.pip-info { flex: 1; }
+.pip-name { font-weight: 600; font-size: 12.5px; margin-bottom: 2px; }
+.pip-desc { font-size: 11px; color: var(--text2); }
+.pip.done .pip-name  { color: var(--green); }
+.pip.error .pip-name { color: var(--rose); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTENT LIBRARY ITEMS
+═══════════════════════════════════════════════════════════════ */
+.lib-item {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: border-color .2s;
+}
+
+.lib-item:hover { border-color: var(--border2); }
+
+.lib-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  background: var(--border);
+}
+
+.lib-body { flex: 1; min-width: 0; }
+
+.lib-headline {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--white);
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+.lib-item { cursor: pointer; }
+.lib-item.expanded { border-color: var(--border2); background: var(--card); }
+.lib-expand-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; color: var(--blue); cursor: pointer;
+  background: var(--bdim); border: 1px solid rgba(68,136,255,.2);
+  border-radius: 4px; padding: 2px 7px; margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace; transition: all .15s;
+}
+.lib-expand-btn:hover { background: var(--bglow); }
+.lib-full-content { display: none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+.lib-item.expanded .lib-full-content { display: block; }
+.lib-section { margin-bottom: 12px; }
+.lib-section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;
+}
+.lib-section-body {
+  font-size: 12px; color: var(--text2); line-height: 1.65;
+  white-space: pre-wrap; background: var(--surface);
+  border-radius: 6px; padding: 10px; max-height: 400px; overflow-y: auto;
+}
+.lib-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.lib-copy-btn {
+  font-size: 10px; padding: 4px 10px;
+  background: var(--gdim); border: 1px solid var(--gglow);
+  border-radius: 4px; color: var(--green); cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; transition: all .15s;
+}
+.lib-copy-btn:hover { background: var(--gglow); }
+.lib-img-preview { max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid var(--border); }
+
+.lib-meta {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KPI BARS
+═══════════════════════════════════════════════════════════════ */
+.kpi-list { display: flex; flex-direction: column; gap: 10px; }
+
+.kpi-item {}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.kpi-name { color: var(--text2); }
+.kpi-value { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+.kpi-track {
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.kpi-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .6s ease;
+}
+
+.kpi-fill.good { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.kpi-fill.warn { background: linear-gradient(90deg, var(--amber), var(--orange)); }
+.kpi-fill.bad  { background: linear-gradient(90deg, var(--rose), var(--purple)); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--card);
+  border: 1px solid var(--gglow);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  z-index: 1000;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  max-width: 340px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+}
+
+.toast.on { transform: translateY(0); opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════════ */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 10px;
+  text-align: center;
+}
+
+.empty-icon { font-size: 36px; opacity: .25; }
+.empty-text { font-size: 13px; color: var(--text3); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SPINNER
+═══════════════════════════════════════════════════════════════ */
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,0,0,.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════════════════════
+   GRIDS
+═══════════════════════════════════════════════════════════════ */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g-sidebar { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+.g-sidebar-sm { display: grid; grid-template-columns: 240px 1fr; gap: 16px; }
+.fg-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCORE BADGE
+═══════════════════════════════════════════════════════════════ */
+.score-badge {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  border: 3px solid;
+  flex-shrink: 0;
+}
+
+.score-badge.good  { border-color: var(--green); color: var(--green); background: var(--gdim); }
+.score-badge.ok    { border-color: var(--amber); color: var(--amber); background: var(--adim); }
+.score-badge.bad   { border-color: var(--rose);  color: var(--rose);  background: var(--rdim); }
+
+/* ═══════════════════════════════════════════════════════════════
+   LOOP HEALTH INDICATOR
+═══════════════════════════════════════════════════════════════ */
+.health-bar {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.hb-seg {
+  height: 16px;
+  flex: 1;
+  border-radius: 3px;
+  background: var(--border2);
+  transition: background .3s;
+}
+
+.hb-seg.on { background: var(--green); }
+.hb-seg.warn { background: var(--amber); }
+.hb-seg.crit { background: var(--rose); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border3); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  .g-sidebar, .g-sidebar-sm { grid-template-columns: 1fr; }
+  .g2, .g3 { grid-template-columns: 1fr; }
+  .loop-flow { padding: 10px 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CREATIVE / PROSPECT / OUTREACH PANELS
+═══════════════════════════════════════════════════════════════ */
+.prospect-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 8px;
+  transition: border-color .2s;
+}
+.prospect-card:hover { border-color: var(--border2); }
+.prospect-score {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 50%; font-weight: 700;
+  font-size: 14px; flex-shrink: 0;
+}
+.prospect-score.hot { background: rgba(255,68,102,.15); color: var(--rose); border: 2px solid var(--rose); }
+.prospect-score.warm { background: rgba(255,170,0,.15); color: var(--amber); border: 2px solid var(--amber); }
+.prospect-score.cold { background: rgba(144,144,170,.1); color: var(--text2); border: 2px solid var(--border2); }
+.email-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+}
+.email-subject { font-weight: 700; color: var(--white); font-size: 13px; margin-bottom: 8px; }
+.email-body { font-size: 12.5px; color: var(--text); line-height: 1.7; white-space: pre-wrap; }
+.image-preview-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin-bottom: 12px;
+}
+.image-preview-card img { width: 100%; display: block; }
+.image-preview-card .img-meta { padding: 10px 14px; font-size: 11.5px; color: var(--text2); }
+.video-scene {
+  background: var(--surface); border-left: 3px solid var(--purple);
+  padding: 10px 12px; margin-bottom: 8px; border-radius: 0 6px 6px 0;
+}
+.linkedin-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--radius);
+  font-size: 12px; font-family: 'JetBrains Mono', monospace;
+}
+.linkedin-status.ok { background: var(--gdim); border: 1px solid var(--gglow); color: var(--green); }
+.linkedin-status.err { background: var(--rdim); border: 1px solid var(--rglow); color: var(--rose); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ══════════════════════════════════════════════════════════
+     TOPBAR
+══════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-mark">3I</div>
+  </div>
+  <div class="topbar-center">
+    <div>
+      <div class="topbar-title">TRIPLE I — MARKETING AI</div>
+      <div class="topbar-sub">autonomous · self-improving · always on</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="system-status">
+      <div class="pulse" id="sys-pulse"></div>
+      <span id="sys-label">SYSTEM ONLINE</span>
+    </div>
+    <div class="loop-badge" id="loop-status-badge">
+      🔄 AUTONOMOUS LOOP READY
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="nav-item active" onclick="nav('dashboard')" id="nav-dashboard" title="Command Center">
+    <span class="nav-icon">⚡</span>
+    <span class="nav-label">CMD</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('loop')" id="nav-loop" title="Autonomous Loop">
+    <span class="nav-icon">🔄</span>
+    <span class="nav-label">Loop</span>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-item" onclick="nav('cmo')" id="nav-cmo" title="CMO Agent">
+    <span class="nav-icon">🧠</span>
+    <span class="nav-label">CMO</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('research')" id="nav-research" title="Research Agent">
+    <span class="nav-icon">🔬</span>
+    <span class="nav-label">Intel</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('generate')" id="nav-generate" title="Content Agent">
+    <span class="nav-icon">✍️</span>
+    <span class="nav-label">Content</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('seo')" id="nav-seo" title="SEO Agent">
+    <span class="nav-icon">🔍</span>
+    <span class="nav-label">SEO</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('ads')" id="nav-ads" title="Ads Agent">
+    <span class="nav-icon">🎯</span>
+    <span class="nav-label">Ads</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('analytics')" id="nav-analytics" title="Analytics Agent">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Stats</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('budget')" id="nav-budget" title="Budget Agent">
+    <span class="nav-icon">💰</span>
+    <span class="nav-label">Budget</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('distribution')" id="nav-distribution" title="Distribution Agent">
+    <span class="nav-icon">📣</span>
+    <span class="nav-label">Deploy</span>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-item" onclick="nav('creative')" id="nav-creative" title="Creative Agent">
+    <span class="nav-icon">🎨</span>
+    <span class="nav-label">Creative</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('prospects')" id="nav-prospects" title="Prospect Hunter">
+    <span class="nav-icon">🎯</span>
+    <span class="nav-label">Prospects</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('outreach')" id="nav-outreach" title="Outreach Agent">
+    <span class="nav-icon">📧</span>
+    <span class="nav-label">Outreach</span>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-item" onclick="nav('library')" id="nav-library" title="Content Library">
+    <span class="nav-icon">📚</span>
+    <span class="nav-label">Library</span>
+  </div>
+
+  <div class="nav-item" onclick="nav('setup')" id="nav-setup" title="Setup">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-label">Setup</span>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════════════════ -->
+<main class="main">
+
+<!-- ─── COMMAND CENTER (DASHBOARD) ─── -->
+<div class="panel active" id="p-dashboard">
+  <div class="ph">
+    <div>
+      <div class="ph-title">COMMAND <em>CENTER</em></div>
+      <div class="ph-sub">real-time autonomous marketing intelligence</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↺ Refresh</button>
+      <button class="btn btn-glow" onclick="nav('loop')">🔄 Run Autonomous Loop →</button>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics-row" id="dash-metrics">
+    <div class="metric green">
+      <div class="metric-val" style="color:var(--green)" id="dm-campaigns">—</div>
+      <div class="metric-label">Active Campaigns</div>
+      <div class="metric-change" style="color:var(--green)">↑ running</div>
+    </div>
+    <div class="metric blue">
+      <div class="metric-val" style="color:var(--blue)" id="dm-pieces">—</div>
+      <div class="metric-label">Content Generated</div>
+      <div class="metric-change" style="color:var(--blue)">✍️ total pieces</div>
+    </div>
+    <div class="metric amber">
+      <div class="metric-val" style="color:var(--amber)" id="dm-agents">7</div>
+      <div class="metric-label">Agents Online</div>
+      <div class="metric-change" style="color:var(--green)">● all systems go</div>
+    </div>
+    <div class="metric purple">
+      <div class="metric-val" style="color:var(--purple)" id="dm-loops">—</div>
+      <div class="metric-label">Loop Cycles Run</div>
+      <div class="metric-change" style="color:var(--purple)">🔄 since launch</div>
+    </div>
+  </div>
+
+  <!-- Agent Fleet Status -->
+  <div class="card">
+    <div class="ch">
+      <div class="ct">🤖 Agent Fleet</div>
+      <span class="tag tg">● All Systems Online</span>
+    </div>
+    <div class="agents-grid">
+      <div class="agent-card ag-cmo" onclick="nav('cmo')">
+        <div class="agent-status"></div>
+        <div class="ai">🧠</div>
+        <div class="an">CMO Orchestrator</div>
+        <div class="ad">Strategy · Coordination · ICP Definition · Goal Setting</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag tm">Orchestrator</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-cmo" style="margin-top:8px">ready</div>
+      </div>
+      <div class="agent-card ag-res" onclick="nav('research')">
+        <div class="agent-status"></div>
+        <div class="ai">🔬</div>
+        <div class="an">Research Agent</div>
+        <div class="ad">Market Intel · Competitor Analysis · Trend Detection · Opportunity Scoring</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag tc">Continuous</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-res" style="margin-top:8px">ready</div>
+      </div>
+      <div class="agent-card ag-cnt" onclick="nav('generate')">
+        <div class="agent-status"></div>
+        <div class="ai">✍️</div>
+        <div class="an">Content Agent</div>
+        <div class="ad">Blogs · LinkedIn · Twitter · Emails · Multi-variant Generation</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag tb">Self-improving</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-cnt" style="margin-top:8px">ready</div>
+      </div>
+      <div class="agent-card ag-seo" onclick="nav('seo')">
+        <div class="agent-status"></div>
+        <div class="ai">🔍</div>
+        <div class="an">SEO Agent</div>
+        <div class="ad">Keyword Clusters · Content Gaps · CSRD/ESRS Query Targeting</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag ta">Keywords</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-seo" style="margin-top:8px">ready</div>
+      </div>
+      <div class="agent-card ag-ads" onclick="nav('ads')">
+        <div class="agent-status"></div>
+        <div class="ai">🎯</div>
+        <div class="an">Ads Agent</div>
+        <div class="ad">Google · LinkedIn Ads · 3× A/B Variants · Auto-targeting</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag tr">A/B Tests</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-ads" style="margin-top:8px">ready</div>
+      </div>
+      <div class="agent-card ag-ana" onclick="nav('analytics')">
+        <div class="agent-status"></div>
+        <div class="ai">📊</div>
+        <div class="an">Analytics Agent</div>
+        <div class="ad">KPI Tracking · Anomaly Detection · A/B Analysis · Feedback Loop</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag tp">Feedback Loop</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-ana" style="margin-top:8px">ready</div>
+      </div>
+      <div class="agent-card ag-bud" onclick="nav('budget')">
+        <div class="agent-status"></div>
+        <div class="ai">💰</div>
+        <div class="an">Budget Agent</div>
+        <div class="ad">ROI Optimization · Channel Reallocation · Pause Bad Campaigns</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag ta">ROI-focused</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-bud" style="margin-top:8px">ready</div>
+      </div>
+      <div class="agent-card ag-dis" onclick="nav('distribution')">
+        <div class="agent-status"></div>
+        <div class="ai">📣</div>
+        <div class="an">Distribution Agent</div>
+        <div class="ad">Deploy · Schedule · Sequence · Email Flows · Cross-channel Amplification</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag tg">Live</span>
+          <span class="tag tg">Deployer</span>
+        </div>
+        <div class="agent-last-run" id="agent-last-dis" style="margin-top:8px">ready</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Autonomous Loop Flow Diagram -->
+  <div class="card">
+    <div class="ch">
+      <div class="ct">🔄 Autonomous Loop Flow</div>
+      <span class="tag tb">Goal → Generate → Deploy → Measure → Auto-adjust</span>
+    </div>
+    <div class="loop-flow">
+      <div class="loop-step">
+        <div class="ls-node done"><div class="ls-icon">🎯</div><div class="ls-name">Goal</div></div>
+        <div class="ls-arrow done">→</div>
+      </div>
+      <div class="loop-step">
+        <div class="ls-node done"><div class="ls-icon">🔬</div><div class="ls-name">Research</div></div>
+        <div class="ls-arrow done">→</div>
+      </div>
+      <div class="loop-step">
+        <div class="ls-node done"><div class="ls-icon">✍️</div><div class="ls-name">Generate</div></div>
+        <div class="ls-arrow done">→</div>
+      </div>
+      <div class="loop-step">
+        <div class="ls-node done"><div class="ls-icon">📣</div><div class="ls-name">Deploy</div></div>
+        <div class="ls-arrow done">→</div>
+      </div>
+      <div class="loop-step">
+        <div class="ls-node done"><div class="ls-icon">📊</div><div class="ls-name">Measure</div></div>
+        <div class="ls-arrow done">→</div>
+      </div>
+      <div class="loop-step">
+        <div class="ls-node done"><div class="ls-icon">💰</div><div class="ls-name">Optimize</div></div>
+        <div class="ls-arrow done">↺</div>
+      </div>
+      <div class="loop-step">
+        <div class="ls-node done" style="border-color:var(--gglow);background:var(--gdim)"><div class="ls-icon">🧠</div><div class="ls-name" style="color:var(--green)">Repeat</div></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;">
+      Loop runs daily or on-demand. Each cycle improves strategy, content, and budget allocation automatically.
+    </div>
+  </div>
+
+  <!-- Recent Content -->
+  <div class="card">
+    <div class="ch">
+      <div class="ct">📄 Recent Outputs</div>
+      <button class="btn btn-ghost btn-sm" onclick="nav('library')">View All Library →</button>
+    </div>
+    <div id="dash-recent">
+      <div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No content yet. Run your first autonomous loop!</div></div>
+    </div>
+  </div>
+
+  <!-- Live Activity Log on Dashboard -->
+  <div class="card">
+    <div class="ch">
+      <div class="ct">⚡ Live Agent Activity</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="sse-status" style="font-size:10px;font-family:monospace;color:var(--text3)">● connecting…</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearLiveLog()">Clear</button>
+      </div>
+    </div>
+    <div id="live-log" class="log-stream" style="max-height:220px;min-height:60px"></div>
+  </div>
+</div>
+
+<!-- ─── AUTONOMOUS LOOP ─── -->
+<div class="panel" id="p-loop">
+  <div class="ph">
+    <div>
+      <div class="ph-title">AUTONOMOUS <em>LOOP</em></div>
+      <div class="ph-sub">Full AI marketing cycle — from strategy to optimization</div>
+    </div>
+    <span class="tag tg">🔄 Self-Improving</span>
+  </div>
+
+  <div class="g-sidebar">
+    <!-- Controls -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="ch"><div class="ct">⚙️ Loop Configuration</div></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="fg">
+            <label>Campaign</label>
+            <select id="loop-campaign"><option value="">— select campaign —</option></select>
+          </div>
+          <div class="fg">
+            <label>Loop Mode</label>
+            <select id="loop-mode">
+              <option value="full">🔄 Full Loop (All 9 Phases)</option>
+              <option value="generate_only">✍️ Generate Only (Content + Ads)</option>
+              <option value="analyze_only">📊 Analyze Only (Analytics + A/B)</option>
+              <option value="optimize_only">💰 Optimize Only (Analytics + Budget)</option>
+            </select>
+          </div>
+          <button class="btn btn-glow" id="loop-run-btn" onclick="runAutonomousLoop()" style="width:100%;padding:12px">
+            🚀 Launch Autonomous Loop
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="resetLoopUI()" style="width:100%">↺ Reset</button>
+        </div>
+      </div>
+
+      <!-- Auto-Goal Generator -->
+      <div class="card">
+        <div class="ch"><div class="ct">🧠 AI Goal Generator</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <p style="font-size:11px;color:var(--text2);line-height:1.6">Let the CMO Agent autonomously define campaign goals for an ICP + market. No manual input needed.</p>
+          <div class="fg">
+            <label>Persona (ICP)</label>
+            <select id="goal-persona"><option value="">— select —</option></select>
+          </div>
+          <div class="fg">
+            <label>Target Country</label>
+            <select id="goal-country"><option value="">— select —</option></select>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="autoGenerateGoals()" style="width:100%">
+            🧠 Auto-Define Campaign Goals
+          </button>
+          <div id="goal-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loop Pipeline + Live Feed -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <!-- Pipeline steps -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📋 Loop Pipeline</div>
+          <div id="loop-status-pill"></div>
+        </div>
+        <div class="pipeline" id="loop-steps">
+          <div class="pip pending" id="lp-cmo_brief"><div class="pip-num pending">1</div><div class="pip-info"><div class="pip-name">CMO Brief</div><div class="pip-desc">Strategic brief · ICP · Goals · KPIs · Agent tasks</div></div><span class="tag tm">CMO</span></div>
+          <div class="pip pending" id="lp-competitor_analysis"><div class="pip-num pending">2</div><div class="pip-info"><div class="pip-name">Competitor Analysis</div><div class="pip-desc">Market intel · Positioning · Competitive angles</div></div><span class="tag tc">Research</span></div>
+          <div class="pip pending" id="lp-regulatory_briefing"><div class="pip-num pending">3</div><div class="pip-info"><div class="pip-name">Regulatory Briefing</div><div class="pip-desc">CSRD/ISSB updates · Country-specific compliance signals</div></div><span class="tag tc">Research</span></div>
+          <div class="pip pending" id="lp-seo_keywords"><div class="pip-num pending">4</div><div class="pip-info"><div class="pip-name">SEO Keyword Research</div><div class="pip-desc">Keyword clusters · Content gaps · Quick wins</div></div><span class="tag ta">SEO</span></div>
+          <div class="pip pending" id="lp-linkedin"><div class="pip-num pending">5</div><div class="pip-info"><div class="pip-name">LinkedIn Post</div><div class="pip-desc">Persona-aware · Country-tailored · Hook-driven</div></div><span class="tag tb">Content</span></div>
+          <div class="pip pending" id="lp-blog"><div class="pip-num pending">6</div><div class="pip-info"><div class="pip-name">Blog Article</div><div class="pip-desc">SEO-optimized long-form from LinkedIn thread</div></div><span class="tag tb">Content</span></div>
+          <div class="pip pending" id="lp-twitter"><div class="pip-num pending">7</div><div class="pip-info"><div class="pip-name">Twitter/X Thread</div><div class="pip-desc">6-tweet thread with hooks and CTAs</div></div><span class="tag tb">Content</span></div>
+          <div class="pip pending" id="lp-google_ads"><div class="pip-num pending">8</div><div class="pip-info"><div class="pip-name">Google Ads (3 Variants)</div><div class="pip-desc">A/B headlines · Descriptions · Targeting</div></div><span class="tag tr">Ads</span></div>
+          <div class="pip pending" id="lp-linkedin_ads"><div class="pip-num pending">9</div><div class="pip-info"><div class="pip-name">LinkedIn Ads (3 Variants)</div><div class="pip-desc">Sponsored content with CTRs optimized per persona</div></div><span class="tag tr">Ads</span></div>
+          <div class="pip pending" id="lp-distribution_plan"><div class="pip-num pending">10</div><div class="pip-info"><div class="pip-name">Distribution Plan</div><div class="pip-desc">Weekly schedule · Posting times · Email flows</div></div><span class="tag tg">Deploy</span></div>
+          <div class="pip pending" id="lp-analytics_report"><div class="pip-num pending">11</div><div class="pip-info"><div class="pip-name">Performance Analytics</div><div class="pip-desc">KPI analysis · Anomaly detection · Score /10</div></div><span class="tag tp">Analytics</span></div>
+          <div class="pip pending" id="lp-ab_test"><div class="pip-num pending">12</div><div class="pip-info"><div class="pip-name">A/B Test Analysis</div><div class="pip-desc">Winner detection · Scale recommendations</div></div><span class="tag tp">Analytics</span></div>
+          <div class="pip pending" id="lp-budget_optimization"><div class="pip-num pending">13</div><div class="pip-info"><div class="pip-name">Budget Optimization</div><div class="pip-desc">Reallocation · ROI forecast · Auto-rules</div></div><span class="tag ta">Budget</span></div>
+        </div>
+      </div>
+
+      <!-- Live Log Stream -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📡 Live Agent Log</div>
+          <button class="btn btn-ghost btn-xs" onclick="clearLog('loop-log')">Clear</button>
+        </div>
+        <div class="log-stream" id="loop-log">
+          <div class="log-entry">
+            <span class="log-ts">--:--</span>
+            <span class="log-icon">⚡</span>
+            <span class="log-text">Autonomous loop engine initialized. Select a campaign and launch.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loop Results Summary -->
+  <div id="loop-results"></div>
+</div>
+
+<!-- ─── CMO AGENT ─── -->
+<div class="panel" id="p-cmo">
+  <div class="ph">
+    <div><div class="ph-title">CMO <em>AGENT</em></div><div class="ph-sub">Strategic orchestrator · ICP · Goals · Pipeline coordination</div></div>
+    <span class="tag tg">✓ Live</span>
+  </div>
+  <div class="g-sidebar">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="ch"><div class="ct">📋 Generate Brief</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="fg"><label>Campaign</label><select id="cmo-campaign"><option value="">— select —</option></select></div>
+          <button class="btn btn-primary" id="cmo-brief-btn" onclick="generateBrief()" style="width:100%">📋 Generate CMO Brief</button>
+          <button class="btn btn-secondary btn-sm" id="cmo-pipeline-btn" onclick="runLegacyPipeline()" style="width:100%">⚡ Quick 5-Step Pipeline</button>
+        </div>
+      </div>
+      <div class="card" style="background:var(--gdim);border-color:var(--gglow)">
+        <div class="ct" style="margin-bottom:10px">💡 CMO Capabilities</div>
+        <ul style="font-size:11px;color:var(--text2);list-style:none;display:flex;flex-direction:column;gap:6px;line-height:1.5">
+          <li>🎯 Defines ICP + messaging angles</li>
+          <li>📐 Sets ROAS/CAC/LTV targets</li>
+          <li>🗺 Allocates budget across channels</li>
+          <li>🔀 Decides what to scale or kill</li>
+          <li>🤝 Supervises all 7 agents</li>
+          <li>💬 Strategic Q&A via chat</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="chat-wrap">
+        <div class="chat-msgs" id="cmo-msgs">
+          <div class="msg">
+            <div class="msg-av bot">CMO</div>
+            <div class="msg-body">
+              <div class="msg-who">CMO Orchestrator · Strategy AI</div>
+              <div class="msg-text">I'm your autonomous CMO. I set goals, coordinate all 7 agents, and run the full marketing loop.
+
+I can:
+• Create campaign briefs with SMART KPIs
+• Recommend channel strategy for Cluster A/B markets
+• Define ICP for SME vs Advisory personas
+• Sequence content for maximum funnel impact
+• Analyze what to scale vs kill
+
+Ask me anything strategic — or launch the autonomous loop from the 🔄 Loop panel.</div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-bar">
+          <input class="chat-input" id="cmo-input" placeholder="Ask the CMO anything… e.g. 'What should we prioritize for Spain this quarter?'" onkeydown="if(event.key==='Enter')sendCMO()">
+          <button class="btn btn-primary" onclick="sendCMO()" style="padding:9px 14px">↵</button>
+        </div>
+      </div>
+      <div id="cmo-brief-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── RESEARCH AGENT ─── -->
+<div class="panel" id="p-research">
+  <div class="ph">
+    <div><div class="ph-title">RESEARCH <em>AGENT</em></div><div class="ph-sub">Market intel · Competitor analysis · Regulatory briefings · Opportunity scoring</div></div>
+    <span class="tag tg">✓ Live</span>
+  </div>
+  <div class="g-sidebar-sm">
+    <div class="card" style="height:fit-content">
+      <div class="ch"><div class="ct">⚙️ Parameters</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg"><label>Campaign</label><select id="res-campaign"><option value="">— select —</option></select></div>
+        <div class="fg"><label>Report Type</label>
+          <select id="res-type">
+            <option value="competitors">🔬 Competitor Analysis</option>
+            <option value="regulatory">📜 Regulatory Briefing</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="res-btn" onclick="runResearch()" style="width:100%">🔬 Run Research Agent</button>
+      </div>
+    </div>
+    <div class="output-panel">
+      <div class="op-header"><div class="op-label">🔬 Research Report</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('res-output')">Copy</button></div>
+      <div class="typing" id="res-typing"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Researching markets…</span></div>
+      <div class="op-body" id="res-output"><div class="empty"><div class="empty-icon">🔬</div><div class="empty-text">Select a campaign and run research</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CONTENT AGENT ─── -->
+<div class="panel" id="p-generate">
+  <div class="ph">
+    <div><div class="ph-title">CONTENT <em>AGENT</em></div><div class="ph-sub">LinkedIn · Blog · Twitter · Persona-aware · Self-improving from performance data</div></div>
+    <span class="tag tg">✓ Live</span>
+  </div>
+  <div class="g-sidebar-sm">
+    <div class="card" style="height:fit-content">
+      <div class="ch"><div class="ct">⚙️ Parameters</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg"><label>Campaign</label><select id="gen-campaign"><option value="">— select —</option></select></div>
+        <div class="fg"><label>Content Type</label>
+          <select id="gen-type" onchange="updateGenUI()">
+            <option value="linkedin">LinkedIn Post</option>
+            <option value="blog">Blog (from LinkedIn)</option>
+            <option value="twitter">Twitter/X Thread</option>
+            <option value="linkedin+blog">LinkedIn → Blog (Pipeline)</option>
+          </select>
+        </div>
+        <div id="gen-blog-selector" style="display:none">
+          <div class="fg"><label>Source LinkedIn Post</label><select id="gen-linkedin-source"><option value="">— select —</option></select></div>
+        </div>
+        <button class="btn btn-primary" id="gen-btn" onclick="generateContent()" style="width:100%">⚡ Generate</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearGen()" style="width:100%">✕ Clear</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="flex-shrink:0">
+        <div class="ch"><div class="ct">📡 Agent Activity</div></div>
+        <div class="log-stream" id="gen-log" style="max-height:120px">
+          <div class="log-entry"><span class="log-icon">🤖</span><span class="log-text">Content Agent ready.</span></div>
+        </div>
+      </div>
+      <div class="output-panel">
+        <div class="op-header">
+          <div class="op-label">📄 Generated Output</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="copyOutput('gen-output')">Copy</button>
+            <button class="btn btn-secondary btn-sm" onclick="approveContent()">✓ Approve</button>
+          </div>
+        </div>
+        <div class="typing" id="gen-typing" style="display:none"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Generating content…</span></div>
+        <div class="op-body" id="gen-output"><div class="empty"><div class="empty-icon">✍️</div><div class="empty-text">Configure and hit Generate</div></div></div>
+      </div>
+      <div id="gen-extra-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SEO AGENT ─── -->
+<div class="panel" id="p-seo">
+  <div class="ph">
+    <div><div class="ph-title">SEO <em>AGENT</em></div><div class="ph-sub">Keyword intelligence · Content gaps · CSRD/ESRS query ownership</div></div>
+    <span class="tag tg">✓ Live</span>
+  </div>
+  <div class="g-sidebar-sm">
+    <div class="card" style="height:fit-content">
+      <div class="ch"><div class="ct">⚙️ Parameters</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg"><label>Campaign</label><select id="seo-campaign"><option value="">— select —</option></select></div>
+        <div class="fg"><label>Action</label>
+          <select id="seo-action" onchange="updateSEOUI()">
+            <option value="keywords">Keyword Cluster Research</option>
+            <option value="optimize">Optimize Existing Content</option>
+          </select>
+        </div>
+        <div id="seo-content-selector" style="display:none">
+          <div class="fg"><label>Content to Optimize</label><select id="seo-content-source"><option value="">— select —</option></select></div>
+        </div>
+        <button class="btn btn-primary" id="seo-btn" onclick="runSEO()" style="width:100%">🔍 Run SEO Agent</button>
+      </div>
+    </div>
+    <div class="output-panel">
+      <div class="op-header"><div class="op-label">🔍 SEO Report</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('seo-output')">Copy</button></div>
+      <div class="typing" id="seo-typing"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Analyzing keywords…</span></div>
+      <div class="op-body" id="seo-output"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Select a campaign and run SEO analysis</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ADS AGENT ─── -->
+<div class="panel" id="p-ads">
+  <div class="ph">
+    <div><div class="ph-title">ADS <em>AGENT</em></div><div class="ph-sub">Google Search + LinkedIn Sponsored · 3× A/B variants · Performance-driven</div></div>
+    <span class="tag tg">✓ Live</span>
+  </div>
+  <div class="g-sidebar-sm">
+    <div class="card" style="height:fit-content">
+      <div class="ch"><div class="ct">⚙️ Parameters</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg"><label>Campaign</label><select id="ads-campaign"><option value="">— select —</option></select></div>
+        <div class="fg"><label>Ad Type</label>
+          <select id="ads-type">
+            <option value="google">Google Search Ads (3 variants)</option>
+            <option value="linkedin">LinkedIn Sponsored Content (3 variants)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="ads-btn" onclick="runAds()" style="width:100%">🎯 Generate Ads</button>
+      </div>
+    </div>
+    <div class="output-panel">
+      <div class="op-header"><div class="op-label">🎯 Ad Copy Output</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('ads-output')">Copy</button></div>
+      <div class="typing" id="ads-typing"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Crafting ad copy…</span></div>
+      <div class="op-body" id="ads-output"><div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Select a campaign and generate ads</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ANALYTICS AGENT ─── -->
+<div class="panel" id="p-analytics">
+  <div class="ph">
+    <div><div class="ph-title">ANALYTICS <em>AGENT</em></div><div class="ph-sub">KPI tracking · Anomaly detection · A/B analysis · Feedback loop engine</div></div>
+    <span class="tag tp">✓ Live · NEW</span>
+  </div>
+  <div class="g-sidebar-sm">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="height:fit-content">
+        <div class="ch"><div class="ct">⚙️ Parameters</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="fg"><label>Campaign</label><select id="ana-campaign"><option value="">— select —</option></select></div>
+          <div class="fg"><label>Analysis Type</label>
+            <select id="ana-type">
+              <option value="performance">📊 Full Performance Analysis</option>
+              <option value="abtest">🧪 A/B Test Analysis</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="ana-btn" onclick="runAnalytics()" style="width:100%">📊 Run Analytics</button>
+        </div>
+      </div>
+      <div class="card" style="background:var(--pdim);border-color:var(--pglow)">
+        <div class="ct" style="margin-bottom:10px;color:var(--purple)">📊 What it does</div>
+        <ul style="font-size:11px;color:var(--text2);list-style:none;display:flex;flex-direction:column;gap:5px">
+          <li>✓ Tracks all KPIs vs. targets</li>
+          <li>✓ Scores campaign /10</li>
+          <li>✓ Detects anomalies</li>
+          <li>✓ Runs A/B test winner analysis</li>
+          <li>✓ Feeds insights to Orchestrator</li>
+          <li>✓ Signals budget reallocation</li>
+        </ul>
+      </div>
+    </div>
+    <div class="output-panel">
+      <div class="op-header"><div class="op-label">📊 Analytics Report</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('ana-output')">Copy</button></div>
+      <div class="typing" id="ana-typing"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Analyzing performance…</span></div>
+      <div class="op-body" id="ana-output"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Select a campaign and run analytics</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── BUDGET AGENT ─── -->
+<div class="panel" id="p-budget">
+  <div class="ph">
+    <div><div class="ph-title">BUDGET <em>AGENT</em></div><div class="ph-sub">ROI optimization · Channel reallocation · Auto-pause · Forecasting</div></div>
+    <span class="tag ta">✓ Live · NEW</span>
+  </div>
+  <div class="g-sidebar-sm">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="height:fit-content">
+        <div class="ch"><div class="ct">⚙️ Parameters</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="fg"><label>Campaign</label><select id="bud-campaign"><option value="">— select —</option></select></div>
+          <button class="btn btn-primary" id="bud-btn" onclick="runBudget()" style="width:100%">💰 Optimize Budget</button>
+        </div>
+      </div>
+      <div class="card" style="background:var(--adim);border-color:var(--aglow)">
+        <div class="ct" style="margin-bottom:10px;color:var(--amber)">💰 What it does</div>
+        <ul style="font-size:11px;color:var(--text2);list-style:none;display:flex;flex-direction:column;gap:5px">
+          <li>✓ Moves budget to high performers</li>
+          <li>✓ Pauses underperforming channels</li>
+          <li>✓ 7-day & 30-day ROI forecast</li>
+          <li>✓ Generates auto-bidding rules</li>
+          <li>✓ Flags risk scenarios</li>
+        </ul>
+      </div>
+    </div>
+    <div class="output-panel">
+      <div class="op-header"><div class="op-label">💰 Budget Optimization Report</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('bud-output')">Copy</button></div>
+      <div class="typing" id="bud-typing"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Optimizing budget…</span></div>
+      <div class="op-body" id="bud-output"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Select a campaign and optimize budget</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DISTRIBUTION AGENT ─── -->
+<div class="panel" id="p-distribution">
+  <div class="ph">
+    <div><div class="ph-title">DISTRIBUTION <em>AGENT</em></div><div class="ph-sub">Multi-channel deployment · Posting schedules · Email flows · SEO cadence</div></div>
+    <span class="tag tg">✓ Live · NEW</span>
+  </div>
+  <div class="g-sidebar-sm">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="height:fit-content">
+        <div class="ch"><div class="ct">⚙️ Parameters</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="fg"><label>Campaign</label><select id="dis-campaign"><option value="">— select —</option></select></div>
+          <button class="btn btn-primary" id="dis-btn" onclick="runDistribution()" style="width:100%">📣 Generate Distribution Plan</button>
+        </div>
+      </div>
+      <div class="card" style="background:var(--gdim);border-color:var(--gglow)">
+        <div class="ct" style="margin-bottom:10px">📣 What it does</div>
+        <ul style="font-size:11px;color:var(--text2);list-style:none;display:flex;flex-direction:column;gap:5px">
+          <li>✓ 7-day posting schedule</li>
+          <li>✓ Optimal times per channel/country</li>
+          <li>✓ 3-email nurture sequence</li>
+          <li>✓ Content sequencing for funnel</li>
+          <li>✓ Cross-channel amplification</li>
+          <li>✓ Automation triggers</li>
+        </ul>
+      </div>
+    </div>
+    <div class="output-panel">
+      <div class="op-header"><div class="op-label">📣 Distribution Plan</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('dis-output')">Copy</button></div>
+      <div class="typing" id="dis-typing"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Planning deployment…</span></div>
+      <div class="op-body" id="dis-output"><div class="empty"><div class="empty-icon">📣</div><div class="empty-text">Select a campaign and generate distribution plan</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CONTENT LIBRARY ─── -->
+<div class="panel" id="p-library">
+  <div class="ph">
+    <div><div class="ph-title">CONTENT <em>LIBRARY</em></div><div class="ph-sub">All generated content · Click any item to expand and copy full content</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="loadLibrary()">↺ Refresh</button>
+  </div>
+  <div class="lib-filters">
+    <select id="lib-filter-campaign" onchange="loadLibrary()" style="width:220px">
+      <option value="">All Campaigns</option>
+    </select>
+    <select id="lib-filter-type" onchange="loadLibrary()" style="width:180px">
+      <option value="">All Types</option>
+      <option value="linkedin">LinkedIn Post</option>
+      <option value="blog">Blog Article</option>
+      <option value="twitter">Twitter Thread</option>
+      <option value="seo_report">SEO Report</option>
+      <option value="google_ads">Google Ads</option>
+      <option value="linkedin_ads">LinkedIn Ads</option>
+      <option value="cmo_brief">CMO Brief</option>
+      <option value="research">Research</option>
+      <option value="analytics_report">Analytics Report</option>
+      <option value="budget_optimization">Budget Optimization</option>
+      <option value="distribution_plan">Distribution Plan</option>
+      <option value="ab_test_analysis">A/B Test Analysis</option>
+      <option value="multimedia">🎨 Multimedia</option>
+      <option value="prospect_list">🎯 Prospect List</option>
+      <option value="outreach_sequence">📧 Outreach Sequence</option>
+      <option value="linkedin_schedule">📅 LinkedIn Schedule</option>
+    </select>
+    <select id="lib-filter-status" onchange="loadLibrary()" style="width:160px">
+      <option value="">All Statuses</option>
+      <option value="draft">Draft</option>
+      <option value="approved">Approved</option>
+      <option value="published">Published</option>
+    </select>
+    <span id="lib-count" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:auto"></span>
+  </div>
+  <div id="lib-content">
+    <div class="empty"><div class="empty-icon">📚</div><div class="empty-text">Loading content library…</div></div>
+  </div>
+</div>
+
+
+<!-- ─── CREATIVE AGENT ─── -->
+<div class="panel" id="p-creative">
+  <div class="ph">
+    <div><div class="ph-title">🎨 CREATIVE <em>AGENT</em></div><div class="ph-sub">AI-generated images (DALL-E 3) · Video scripts · Platform-optimised visuals</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">🖼️ Multimedia for Content</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Generate a DALL-E 3 image + video script + platform specs for any existing content piece.</p>
+      <div class="fg"><label>Select Campaign</label><select id="creative-campaign"><option value="">— select —</option></select></div>
+      <div class="fg" style="margin-top:10px"><label>Select Content Piece</label><select id="creative-content-id"><option value="">— select campaign first —</option></select></div>
+      <button class="btn btn-glow" style="width:100%;margin-top:12px" onclick="generateCreativeForContent()">🎨 Generate Multimedia</button>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">🎬 Full Campaign Visual Pack</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Generate hero image + all channel variants + 60-sec video script for the whole campaign.</p>
+      <div class="fg"><label>Select Campaign</label><select id="creative-camp-campaign"><option value="">— select —</option></select></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="generateCampaignCreative()">🎬 Generate Full Visual Pack</button>
+      <div class="ct" style="margin-top:16px;font-size:11px">What's included:</div>
+      <ul style="font-size:11px;color:var(--text2);margin-top:8px;display:flex;flex-direction:column;gap:4px;list-style:none">
+        <li>✓ Hero image (DALL-E 3, HD)</li><li>✓ LinkedIn post visual (1:1)</li>
+        <li>✓ LinkedIn banner (1.91:1)</li><li>✓ Google Display Ad</li>
+        <li>✓ Twitter header card</li><li>✓ Email header</li>
+        <li>✓ 60-sec video script (scene-by-scene)</li><li>✓ Brand palette + typography</li>
+      </ul>
+    </div>
+  </div>
+  <div class="output-panel">
+    <div class="op-header"><div class="op-label">🎨 Creative Output</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('creative-output')">Copy</button></div>
+    <div class="typing" id="creative-typing" style="display:none"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Generating visuals with DALL-E 3…</span></div>
+    <div class="op-body" id="creative-output"><div class="empty"><div class="empty-icon">🎨</div><div class="empty-text">Select a campaign or content and generate multimedia</div></div></div>
+  </div>
+</div>
+
+<!-- ─── PROSPECT HUNTER ─── -->
+<div class="panel" id="p-prospects">
+  <div class="ph">
+    <div><div class="ph-title">🎯 PROSPECT <em>HUNTER</em></div><div class="ph-sub">AI-powered B2B prospecting · Product-qualified companies · ESG software buyers</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">🔍 Hunt Prospects</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Find 15 product-qualified companies actively looking for ESG/carbon reporting software.</p>
+      <div class="fg-2">
+        <div class="fg"><label>Country</label><select id="hunt-country-name">
+          <option value="Spain,CLUSTER_A">🇪🇸 Spain (Cluster A)</option>
+          <option value="France,CLUSTER_A">🇫🇷 France (Cluster A)</option>
+          <option value="Netherlands,CLUSTER_A">🇳🇱 Netherlands (Cluster A)</option>
+          <option value="Belgium,CLUSTER_A">🇧🇪 Belgium (Cluster A)</option>
+          <option value="Sweden,CLUSTER_A">🇸🇪 Sweden (Cluster A)</option>
+          <option value="UAE,CLUSTER_B">🇦🇪 UAE (Cluster B)</option>
+          <option value="Japan,CLUSTER_B">🇯🇵 Japan (Cluster B)</option>
+          <option value="Germany,CLUSTER_A">🇩🇪 Germany (Cluster A)</option>
+          <option value="Italy,CLUSTER_A">🇮🇹 Italy (Cluster A)</option>
+          <option value="UK,CLUSTER_B">🇬🇧 UK (Cluster B)</option>
+        </select></div>
+        <div class="fg"><label>Target Persona</label><select id="hunt-persona">
+          <option value="SME">SME (250-1500 employees)</option>
+          <option value="ADVISORY">Advisory Firms</option>
+        </select></div>
+        <div class="fg"><label>Industry Focus</label><select id="hunt-industry">
+          <option value="all">All Industries</option>
+          <option value="manufacturing">Manufacturing</option>
+          <option value="financial_services">Financial Services</option>
+          <option value="retail">Retail & Consumer</option>
+          <option value="real_estate">Real Estate</option>
+          <option value="logistics">Logistics & Supply Chain</option>
+          <option value="food_beverage">Food & Beverage</option>
+          <option value="technology">Technology</option>
+          <option value="energy">Energy & Utilities</option>
+        </select></div>
+        <div class="fg"><label>Link to Campaign (optional)</label><select id="hunt-campaign"><option value="">— none —</option></select></div>
+      </div>
+      <button class="btn btn-glow" style="width:100%;margin-top:12px" onclick="huntProspects()">🎯 Hunt Product-Qualified Prospects</button>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">⚡ Score a Specific Company</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Get an instant 1-100 qualification score for any specific company.</p>
+      <div class="fg"><label>Company Name</label><input type="text" id="score-company" placeholder="e.g. Inditex SA"></div>
+      <div class="fg" style="margin-top:8px"><label>Country</label><input type="text" id="score-country" placeholder="e.g. Spain"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="scoreProspect()">⚡ Score This Company</button>
+    </div>
+  </div>
+  <div class="output-panel">
+    <div class="op-header"><div class="op-label">🎯 Prospect Intelligence</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('prospects-output')">Copy JSON</button></div>
+    <div class="typing" id="prospects-typing" style="display:none"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Hunting qualified prospects…</span></div>
+    <div class="op-body" id="prospects-output"><div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Select a country and persona, then hunt for prospects</div></div></div>
+  </div>
+</div>
+
+<!-- ─── OUTREACH AGENT ─── -->
+<div class="panel" id="p-outreach">
+  <div class="ph">
+    <div><div class="ph-title">📧 OUTREACH <em>AGENT</em></div><div class="ph-sub">Hyper-personalized emails · 3-sequence + LinkedIn InMail · Sounds human, not templated</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">✍️ Write Outreach Sequence</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">3 cold emails + LinkedIn InMail, written for a specific company and contact. Pain-led, specific, human.</p>
+      <div class="fg-2">
+        <div class="fg"><label>Company Name</label><input type="text" id="out-company" placeholder="e.g. Grupo Cortefiel"></div>
+        <div class="fg"><label>Industry</label><input type="text" id="out-industry" placeholder="e.g. Retail"></div>
+        <div class="fg"><label>Country</label><input type="text" id="out-country" placeholder="e.g. Spain"></div>
+        <div class="fg"><label>Target Title</label><input type="text" id="out-title" placeholder="e.g. Head of Sustainability"></div>
+        <div class="fg" style="grid-column:1/-1"><label>Their #1 Pain Point</label><input type="text" id="out-pain" placeholder="e.g. Manually mapping ESRS requirements across 40 suppliers takes 3 months every year"></div>
+        <div class="fg" style="grid-column:1/-1"><label>Trigger Event (why NOW)</label><input type="text" id="out-trigger" placeholder="e.g. New CFO announced public commitment to CSRD compliance by Q1 2025"></div>
+        <div class="fg"><label>Persona Type</label><select id="out-persona"><option value="SME">SME</option><option value="ADVISORY">Advisory</option></select></div>
+        <div class="fg"><label>Cluster</label><select id="out-cluster"><option value="CLUSTER_A">Cluster A (EU/CSRD)</option><option value="CLUSTER_B">Cluster B (ISSB/Global)</option></select></div>
+        <div class="fg"><label>Link to Campaign</label><select id="out-campaign"><option value="">— none —</option></select></div>
+        <div class="fg"><label>Qualification Score</label><input type="number" id="out-score" value="85" min="1" max="100"></div>
+      </div>
+      <button class="btn btn-glow" style="width:100%;margin-top:12px" onclick="generateOutreachSequence()">📧 Write Email Sequence</button>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">⚡ Bulk from Prospect List</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Auto-generate sequences for top prospects from any saved prospect list.</p>
+      <div class="fg"><label>Prospect List (from Library)</label><select id="bulk-prospect-list"><option value="">— load prospect lists —</option></select></div>
+      <div class="fg" style="margin-top:8px"><label>Max prospects to write for</label>
+        <select id="bulk-max"><option value="3">Top 3</option><option value="5" selected>Top 5</option><option value="10">Top 10</option></select>
+      </div>
+      <div class="fg" style="margin-top:8px"><label>Link to Campaign</label><select id="bulk-campaign"><option value="">— none —</option></select></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="generateBulkOutreach()">⚡ Bulk Generate Sequences</button>
+      <div class="ch" style="margin-top:20px"><div class="ct">📅 LinkedIn Scheduler</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Post directly to LinkedIn or create a schedule from your distribution plan.</p>
+      <button class="btn btn-ghost btn-sm" onclick="checkLinkedInCreds()" style="width:100%;margin-bottom:8px">🔗 Check LinkedIn Credentials</button>
+      <div id="li-cred-status" style="margin-bottom:8px"></div>
+      <div class="fg"><label>Content to Post (LinkedIn post ID)</label><input type="text" id="li-content-id" placeholder="paste content ID from library"></div>
+      <button class="btn btn-ghost btn-sm" onclick="postToLinkedInNow()" style="width:100%;margin-top:8px">📤 Post to LinkedIn Now</button>
+    </div>
+  </div>
+  <div class="output-panel">
+    <div class="op-header"><div class="op-label">📧 Outreach Sequences</div><button class="btn btn-ghost btn-sm" onclick="copyOutput('outreach-output')">Copy</button></div>
+    <div class="typing" id="outreach-typing" style="display:none"><div class="td"></div><div class="td"></div><div class="td"></div><span style="font-size:11px;color:var(--text2);margin-left:4px">Writing personalized sequences…</span></div>
+    <div class="op-body" id="outreach-output"><div class="empty"><div class="empty-icon">📧</div><div class="empty-text">Fill in company details and generate your outreach sequence</div></div></div>
+  </div>
+</div>
+
+<!-- ─── SETUP ─── -->
+<div class="panel" id="p-setup">
+  <div class="ph"><div><div class="ph-title">SETUP <em>&amp; CONFIG</em></div><div class="ph-sub">Personas · Countries · Campaigns · Seed data</div></div></div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">🌱 Seed Default Data</div></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">Creates the 2 default personas (SME + Advisory) and all 7 target countries with proper cluster assignments. Run this once on a fresh database.</p>
+      <button class="btn btn-primary" onclick="seedData()" style="width:100%">Seed Personas + Countries</button>
+      <div id="seed-result" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">➕ Create Campaign</div></div>
+      <div class="fg-2">
+        <div class="fg" style="grid-column:1/-1"><label>Campaign Name</label><input type="text" id="camp-name" placeholder="e.g. Spain SME CSRD Q1 2025"></div>
+        <div class="fg"><label>Persona</label><select id="camp-persona"><option value="">— select —</option></select></div>
+        <div class="fg"><label>Country</label><select id="camp-country"><option value="">— select —</option></select></div>
+        <div class="fg"><label>Framework Focus</label>
+          <select id="camp-framework">
+            <option value="Carbon">Carbon Reporting</option>
+            <option value="Interoperability">Framework Interoperability</option>
+            <option value="Full ESG">Full ESG</option>
+          </select>
+        </div>
+        <div class="fg"><label>Channel</label>
+          <select id="camp-channel">
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Google">Google</option>
+            <option value="Both">Both</option>
+          </select>
+        </div>
+        <div class="fg" style="grid-column:1/-1"><label>Campaign Goal</label><textarea id="camp-goal" placeholder="e.g. Drive CSRD compliance leads for SMEs in Spain Q1 2025"></textarea></div>
+        <div class="fg" style="grid-column:1/-1"><button class="btn btn-primary" onclick="createCampaign()" style="width:100%">Create Campaign</button></div>
+      </div>
+      <div id="camp-result" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ct">📋 Existing Campaigns</div><button class="btn btn-ghost btn-sm" onclick="loadSetupData()">↺ Refresh</button></div>
+    <div id="campaigns-list"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Loading…</div></div></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span style="color:var(--green);font-size:16px">✓</span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════════════════
+// Auto-detect API base: empty string when served from FastAPI (/ui), 
+// fallback to localhost when opened as a local file
+const API = (window.location.protocol === 'file:') ? 'http://localhost:8000' : '';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let loopRunning = false;
+let approveTargetId = null;
+let loopCount = parseInt(localStorage.getItem('loopCount') || '0');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CORE HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function toast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.style.borderColor = isErr ? 'var(--rglow)' : 'var(--gglow)';
+  t.firstElementChild.style.color = isErr ? 'var(--rose)' : 'var(--green)';
+  t.firstElementChild.textContent = isErr ? '✕' : '✓';
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 3400);
+}
+
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ detail: r.statusText }));
+    throw new Error(err.detail || r.statusText);
+  }
+  return r.json();
+}
+
+function nowTs() {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0') + ':' + d.getSeconds().toString().padStart(2,'0');
+}
+
+function showTyping(id) {
+  const el = document.getElementById(id);
+  if (el) { el.style.display = 'flex'; el.classList.add('on'); }
+}
+
+function hideTyping(id) {
+  const el = document.getElementById(id);
+  if (el) { el.style.display = 'none'; el.classList.remove('on'); }
+}
+
+function copyOutput(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard?.writeText(el.innerText);
+  toast('Copied to clipboard!');
+}
+
+function clearLog(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOG STREAM
+// ═══════════════════════════════════════════════════════════════════════════
+function addLog(logId, icon, text, type = '') {
+  const log = document.getElementById(logId);
+  if (!log) return;
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-ts">${nowTs()}</span><span class="log-icon">${icon}</span><span class="log-text ${type}">${text}</span>`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════
+function nav(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById(`p-${name}`);
+  const navEl = document.getElementById(`nav-${name}`);
+  if (panel) panel.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'library') { loadCampaignsIntoSelect('lib-filter-campaign'); loadLibrary(); }
+  if (name === 'setup') loadSetupData();
+  if (['cmo','research','generate','seo','ads','analytics','budget','distribution','loop'].includes(name)) {
+    loadCampaignsIntoSelect(`${name === 'generate' ? 'gen' : name === 'research' ? 'res' : name === 'analytics' ? 'ana' : name === 'budget' ? 'bud' : name === 'distribution' ? 'dis' : name}-campaign`);
+    if (name === 'loop') { loadCampaignsIntoSelect('loop-campaign'); loadPersonasAndCountries(); }
+    if (name === 'cmo') loadCampaignsIntoSelect('cmo-campaign');
+    if (name === 'seo') loadCampaignsIntoSelect('seo-campaign');
+    if (name === 'ads') loadCampaignsIntoSelect('ads-campaign');
+  }
+  if (name === 'creative') {
+    loadCampaignsIntoSelect('creative-campaign');
+    loadCampaignsIntoSelect('creative-camp-campaign');
+  }
+  if (name === 'prospects') {
+    loadCampaignsIntoSelect('hunt-campaign');
+  }
+  if (name === 'outreach') {
+    loadCampaignsIntoSelect('out-campaign');
+    loadCampaignsIntoSelect('bulk-campaign');
+    loadProspectListsIntoSelect();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA LOADERS
+// ═══════════════════════════════════════════════════════════════════════════
+async function loadCampaignsIntoSelect(selectId) {
+  try {
+    const campaigns = await api('/campaigns/');
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    const cur = sel.value;
+    // Preserve "All Campaigns" option for library filter
+    const isLibFilter = selectId === 'lib-filter-campaign';
+    sel.innerHTML = isLibFilter
+      ? '<option value="">All Campaigns</option>'
+      : '<option value="">— select campaign —</option>';
+    campaigns.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  } catch (e) {
+    console.warn('Could not load campaigns:', e.message);
+  }
+}
+
+async function loadPersonasAndCountries() {
+  try {
+    const [personas, countries] = await Promise.all([
+      api('/personas/'),
+      api('/countries/')
+    ]);
+
+    ['goal-persona'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— select —</option>';
+      personas.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.id; o.textContent = p.name;
+        sel.appendChild(o);
+      });
+    });
+
+    ['goal-country'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— select —</option>';
+      countries.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.id; o.textContent = `${c.name} (${c.cluster})`;
+        sel.appendChild(o);
+      });
+    });
+  } catch (e) {
+    console.warn('Could not load personas/countries:', e.message);
+  }
+}
+
+async function loadDashboard() {
+  try {
+    const [campaigns, content] = await Promise.all([
+      api('/campaigns/'),
+      api('/content/').catch(() => [])
+    ]);
+
+    document.getElementById('dm-campaigns').textContent = campaigns.length;
+    document.getElementById('dm-pieces').textContent = content.length;
+    document.getElementById('dm-loops').textContent = loopCount;
+
+    // Recent content
+    const recent = content.slice(-6).reverse();
+    const container = document.getElementById('dash-recent');
+    if (!recent.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No content yet. Run your first autonomous loop!</div></div>';
+      return;
+    }
+
+    const typeIcons = {
+      linkedin: '💼', blog: '📝', twitter: '🐦', google_ads: '🎯',
+      linkedin_ads: '🎯', cmo_brief: '🧠', seo_report: '🔍',
+      research: '🔬', analytics_report: '📊', budget_optimization: '💰',
+      distribution_plan: '📣', ab_test_analysis: '🧪'
+    };
+
+    const tagColors = {
+      linkedin: 'tb', blog: 'tg', twitter: 'tc', google_ads: 'tr',
+      linkedin_ads: 'tr', cmo_brief: 'tg', seo_report: 'ta',
+      research: 'tc', analytics_report: 'tp', budget_optimization: 'ta',
+      distribution_plan: 'tg', ab_test_analysis: 'tp'
+    };
+
+    container.innerHTML = recent.map(r => `
+      <div class="lib-item">
+        <div class="lib-icon">${typeIcons[r.type] || '📄'}</div>
+        <div class="lib-body">
+          <div class="lib-headline">${r.headline || '(no headline)'}</div>
+          <div class="lib-meta">
+            <span class="tag ${tagColors[r.type] || 'tm'}">${r.type}</span>
+            <span>${r.status || 'draft'}</span>
+            <span>${new Date(r.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.warn('Dashboard load error:', e.message);
+  }
+}
+
+async function loadSetupData() {
+  try {
+    const [campaigns, personas, countries] = await Promise.all([
+      api('/campaigns/'),
+      api('/personas/'),
+      api('/countries/')
+    ]);
+
+    // Populate campaign creation selects
+    ['camp-persona'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— select —</option>';
+      personas.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.id; o.textContent = p.name;
+        sel.appendChild(o);
+      });
+    });
+
+    ['camp-country'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— select —</option>';
+      countries.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.id; o.textContent = `${c.name} (${c.cluster})`;
+        sel.appendChild(o);
+      });
+    });
+
+    // Campaigns list
+    const el = document.getElementById('campaigns-list');
+    if (!campaigns.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No campaigns yet. Create one above.</div></div>';
+      return;
+    }
+
+    el.innerHTML = `
+      <table class="tbl">
+        <thead><tr>
+          <th>Name</th><th>Framework</th><th>Channel</th><th>Status</th><th>Created</th>
+        </tr></thead>
+        <tbody>
+          ${campaigns.map(c => `
+            <tr>
+              <td style="font-weight:600;color:var(--white)">${c.name}</td>
+              <td><span class="tag tb">${c.framework_focus || '—'}</span></td>
+              <td><span class="tag tg">${c.channel || '—'}</span></td>
+              <td><span class="tag ${c.status === 'active' ? 'tg' : 'tm'}">${c.status || 'active'}</span></td>
+              <td style="color:var(--text2)">${new Date(c.created_at).toLocaleDateString()}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    document.getElementById('campaigns-list').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading data: ${e.message}</div></div>`;
+  }
+}
+
+async function loadLibrary() {
+  const typeFilter    = document.getElementById('lib-filter-type')?.value    || '';
+  const statusFilter  = document.getElementById('lib-filter-status')?.value  || '';
+  const campaignFilter= document.getElementById('lib-filter-campaign')?.value || '';
+
+  try {
+    // Build query — backend accepts: type=, status=, campaign_id=
+    const params = new URLSearchParams();
+    if (typeFilter)     params.set('type', typeFilter);
+    if (statusFilter)   params.set('status', statusFilter);
+    if (campaignFilter) params.set('campaign_id', campaignFilter);
+    const url = '/content/?' + params.toString();
+
+    const items = await api(url);
+    const container = document.getElementById('lib-content');
+
+    // Update count badge
+    const countEl = document.getElementById('lib-count');
+    if (countEl) countEl.textContent = items.length + ' items';
+
+    if (!items.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No content found for these filters.</div></div>';
+      return;
+    }
+
+    const typeIcons = {
+      linkedin:'💼', blog:'📝', twitter:'🐦', google_ads:'🎯',
+      linkedin_ads:'🎯', cmo_brief:'🧠', seo_report:'🔍',
+      research:'🔬', analytics_report:'📊', budget_optimization:'💰',
+      distribution_plan:'📣', ab_test_analysis:'🧪',
+      multimedia:'🎨', prospect_list:'🎯', outreach_sequence:'📧',
+      linkedin_schedule:'📅', prospect_score:'🏆'
+    };
+    const tagColors = {
+      linkedin:'tb', blog:'tg', twitter:'tc', google_ads:'tr',
+      linkedin_ads:'tr', cmo_brief:'tg', seo_report:'ta',
+      research:'tc', analytics_report:'tp', budget_optimization:'ta',
+      distribution_plan:'tg', ab_test_analysis:'tp',
+      multimedia:'tp', prospect_list:'tr', outreach_sequence:'tb'
+    };
+
+    container.innerHTML = items.map(r => {
+      const id = r.id;
+      const icon = typeIcons[r.type] || '📄';
+      const tagCls = tagColors[r.type] || 'tm';
+      const stCls = r.status === 'approved' ? 'tg' : r.status === 'published' ? 'tb' : 'tm';
+      const bodyPreview = r.body ? escapeHtml(r.body.slice(0, 160)) + (r.body.length > 160 ? '…' : '') : '';
+      return `
+      <div class="lib-item" id="li-${id}">
+        <div class="lib-icon">${icon}</div>
+        <div class="lib-body" style="flex:1;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div class="lib-headline" style="cursor:pointer;flex:1" onclick="toggleLibItem('${id}')">${escapeHtml(r.headline || '(no headline)')}</div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 8px" onclick="copyLibItem('${id}')">📋 Copy</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 8px" onclick="toggleLibItem('${id}')">👁 View</button>
+            </div>
+          </div>
+          <div class="lib-meta">
+            <span class="tag ${tagCls}">${r.type}</span>
+            <span class="tag ${stCls}">${r.status}</span>
+            <span style="color:var(--text3)">${r.agent_type}</span>
+            <span style="color:var(--text3)">${new Date(r.created_at).toLocaleDateString()} ${new Date(r.created_at).toLocaleTimeString()}</span>
+            ${r.cost_usd ? `<span style="color:var(--green)">💸 $${Number(r.cost_usd).toFixed(4)}</span>` : ''}
+            ${r.total_tokens ? `<span style="color:var(--text3)">${r.total_tokens.toLocaleString()} tokens</span>` : ''}
+          </div>
+          ${bodyPreview ? `<div style="font-size:11.5px;color:var(--text2);margin-top:5px;line-height:1.6">${bodyPreview}</div>` : ''}
+          <!-- EXPANDED FULL CONTENT -->
+          <div id="lib-expand-${id}" style="display:none;margin-top:12px">
+            <div style="border-top:1px solid var(--border2);padding-top:12px">
+              ${r.body ? `
+              <div style="margin-bottom:12px">
+                <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">📄 Full Body</div>
+                <div id="lib-body-${id}" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:12.5px;color:var(--text);line-height:1.75;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto">${escapeHtml(r.body)}</div>
+                <button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:10px" onclick="copyText('lib-body-${id}')">📋 Copy Body</button>
+              </div>` : ''}
+              ${r.json_output ? `
+              <div>
+                <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🔧 Full JSON Output</div>
+                <div id="lib-json-${id}" style="background:#0a0a14;border:1px solid var(--border);border-radius:6px;padding:14px;font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:500px;overflow-y:auto">${escapeHtml(JSON.stringify(r.json_output, null, 2))}</div>
+                <button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:10px" onclick="copyText('lib-json-${id}')">📋 Copy JSON</button>
+              </div>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('lib-content').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading library: ${e.message}</div></div>`;
+    console.error('Library error:', e);
+  }
+}
+
+function toggleLibItem(id) {
+  const el = document.getElementById('lib-expand-' + id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function copyText(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText || el.textContent)
+    .then(() => showToast('Copied to clipboard!'))
+    .catch(() => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+      showToast('Copied!');
+    });
+}
+
+function copyLibItem(id) {
+  // Copy body + JSON together as clean text
+  const bodyEl = document.getElementById('lib-body-' + id);
+  const jsonEl = document.getElementById('lib-json-' + id);
+  // Expand item first so elements exist
+  const expandEl = document.getElementById('lib-expand-' + id);
+  if (expandEl && expandEl.style.display === 'none') {
+    expandEl.style.display = 'block';
+  }
+  setTimeout(() => {
+    const bodyText = bodyEl ? (bodyEl.innerText || '') : '';
+    const jsonText = jsonEl ? (jsonEl.innerText || '') : '';
+    const combined = [bodyText, jsonText].filter(Boolean).join('\n\n---\n\n');
+    navigator.clipboard.writeText(combined)
+      .then(() => showToast('Full content copied!'))
+      .catch(() => showToast('Select text manually to copy'));
+  }, 50);
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SETUP ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+async function seedData() {
+  const el = document.getElementById('seed-result');
+  el.innerHTML = '<div style="color:var(--blue);font-size:12px">⏳ Seeding…</div>';
+  try {
+    await api('/personas/seed', 'POST');
+    await api('/countries/seed', 'POST');
+    el.innerHTML = '<div style="color:var(--green);font-size:12px">✓ Personas + Countries seeded!</div>';
+    toast('Seed data created!');
+    loadSetupData();
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:12px">✕ ${e.message}</div>`;
+    toast(e.message, true);
+  }
+}
+
+async function createCampaign() {
+  const name = document.getElementById('camp-name').value.trim();
+  const persona_id = document.getElementById('camp-persona').value;
+  const country_id = document.getElementById('camp-country').value;
+  const framework_focus = document.getElementById('camp-framework').value;
+  const channel = document.getElementById('camp-channel').value;
+  const goal = document.getElementById('camp-goal').value.trim();
+
+  if (!name || !persona_id || !country_id || !goal) {
+    toast('Fill in all required fields', true);
+    return;
+  }
+
+  const el = document.getElementById('camp-result');
+  el.innerHTML = '<div style="color:var(--blue);font-size:12px">⏳ Creating…</div>';
+
+  try {
+    const c = await api('/campaigns/', 'POST', { name, persona_id, country_id, framework_focus, channel, goal });
+    el.innerHTML = `<div style="color:var(--green);font-size:12px">✓ Campaign "${c.name}" created!</div>`;
+    toast('Campaign created!');
+    document.getElementById('camp-name').value = '';
+    document.getElementById('camp-goal').value = '';
+    loadSetupData();
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:12px">✕ ${e.message}</div>`;
+    toast(e.message, true);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTONOMOUS LOOP
+// ═══════════════════════════════════════════════════════════════════════════
+async function runAutonomousLoop() {
+  const campaignId = document.getElementById('loop-campaign').value;
+  const loopMode = document.getElementById('loop-mode').value;
+
+  if (!campaignId) { toast('Select a campaign first', true); return; }
+  if (loopRunning) { toast('Loop already running!', true); return; }
+
+  loopRunning = true;
+  document.getElementById('loop-run-btn').disabled = true;
+  document.getElementById('loop-run-btn').innerHTML = '<div class="spinner"></div> Loop Running…';
+
+  // Update status indicators
+  const sysPulse = document.getElementById('sys-pulse');
+  const loopBadge = document.getElementById('loop-status-badge');
+  sysPulse.className = 'pulse running';
+  document.getElementById('sys-label').textContent = 'LOOP RUNNING';
+  loopBadge.className = 'loop-badge running';
+  loopBadge.textContent = '⚙️ AUTONOMOUS LOOP ACTIVE';
+
+  // Reset pipeline UI
+  resetLoopPipeline();
+  clearLog('loop-log');
+
+  addLog('loop-log', '🚀', `Autonomous loop launched — Mode: ${loopMode}`, 'info');
+  addLog('loop-log', '🧠', 'CMO Orchestrator initializing strategy…');
+
+  // Set loop-status-pill
+  document.getElementById('loop-status-pill').innerHTML = '<span class="tag tb">⚙️ Running</span>';
+
+  // Clear previous results
+  document.getElementById('loop-results').innerHTML = '';
+
+  try {
+    const result = await api(`/generate/autonomous/loop/${campaignId}`, 'POST', { loop_mode: loopMode });
+
+    // Update pipeline steps based on results
+    if (result.results) {
+      for (const [step, info] of Object.entries(result.results)) {
+        updatePipelineStep(step, info.status === 'success' ? 'done' : 'error');
+        const icon = info.status === 'success' ? '✓' : '✕';
+        const type = info.status === 'success' ? 'success' : 'error';
+        addLog('loop-log', icon, `${step}: ${info.status}${info.error ? ' — ' + info.error : ''}`, type);
+      }
+    }
+
+    // Show summary
+    if (result.loop_summary) {
+      renderLoopSummary(result);
+    }
+
+    // Increment loop count
+    loopCount++;
+    localStorage.setItem('loopCount', loopCount);
+    document.getElementById('dm-loops').textContent = loopCount;
+
+    addLog('loop-log', '✅', `Loop complete — ${result.successes}/${Object.keys(result.results || {}).length} steps succeeded`, 'success');
+    toast(`Autonomous loop complete! ${result.successes} steps succeeded.`);
+
+    document.getElementById('loop-status-pill').innerHTML = `<span class="tag tg">✓ Complete (${result.successes} steps)</span>`;
+
+  } catch (e) {
+    addLog('loop-log', '✕', `Loop failed: ${e.message}`, 'error');
+    toast(`Loop error: ${e.message}`, true);
+    document.getElementById('loop-status-pill').innerHTML = '<span class="tag tr">✕ Failed</span>';
+  } finally {
+    loopRunning = false;
+    document.getElementById('loop-run-btn').disabled = false;
+    document.getElementById('loop-run-btn').innerHTML = '🚀 Launch Autonomous Loop';
+    sysPulse.className = 'pulse';
+    document.getElementById('sys-label').textContent = 'SYSTEM ONLINE';
+    loopBadge.className = 'loop-badge';
+    loopBadge.textContent = '🔄 AUTONOMOUS LOOP READY';
+    loadDashboard();
+  }
+}
+
+function updatePipelineStep(stepKey, status) {
+  const el = document.getElementById(`lp-${stepKey}`);
+  if (!el) return;
+
+  el.className = `pip ${status}`;
+  const numEl = el.querySelector('.pip-num');
+  if (numEl) numEl.className = `pip-num ${status}`;
+
+  if (status === 'done') {
+    const num = numEl?.textContent || '';
+    if (numEl) numEl.textContent = '✓';
+  } else if (status === 'error') {
+    const numEl2 = el.querySelector('.pip-num');
+    if (numEl2) numEl2.textContent = '✕';
+  }
+}
+
+function resetLoopPipeline() {
+  const steps = ['cmo_brief','competitor_analysis','regulatory_briefing','seo_keywords',
+                 'linkedin','blog','twitter','google_ads','linkedin_ads',
+                 'distribution_plan','analytics_report','ab_test','budget_optimization'];
+  steps.forEach((s, i) => {
+    const el = document.getElementById(`lp-${s}`);
+    if (el) {
+      el.className = 'pip pending';
+      const num = el.querySelector('.pip-num');
+      if (num) { num.className = 'pip-num pending'; num.textContent = i + 1; }
+    }
+  });
+}
+
+function resetLoopUI() {
+  resetLoopPipeline();
+  clearLog('loop-log');
+  document.getElementById('loop-results').innerHTML = '';
+  document.getElementById('loop-status-pill').innerHTML = '';
+  addLog('loop-log', '⚡', 'Loop reset. Ready to launch.');
+}
+
+function renderLoopSummary(result) {
+  const s = result.loop_summary;
+  const healthColors = { excellent: 'tg', good: 'tg', needs_attention: 'ta', critical: 'tr' };
+  const healthColor = healthColors[s.loop_health] || 'tm';
+
+  const html = `
+    <div class="card" style="margin-top:4px">
+      <div class="ch">
+        <div class="ct">🎯 Loop Synthesis — CMO Report</div>
+        <span class="tag ${healthColor}">${s.loop_health?.toUpperCase() || 'COMPLETE'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div>
+          <div style="font-size:10px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace">Summary</div>
+          <div style="font-size:12.5px;color:var(--text2);line-height:1.6">${s.executive_summary}</div>
+          <div style="margin-top:12px;padding:10px;background:var(--gdim);border:1px solid var(--gglow);border-radius:8px">
+            <div style="font-size:9px;letter-spacing:1px;color:var(--green);text-transform:uppercase;margin-bottom:5px;font-family:'JetBrains Mono',monospace">Next Loop Priority</div>
+            <div style="font-size:12px;font-weight:600;color:var(--white)">${s.next_loop_priority}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace">Recommended in ${s.next_loop_in_days} day${s.next_loop_in_days !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace">🏆 Top Wins</div>
+          ${(s.top_wins || []).map(w => `<div style="display:flex;gap:6px;margin-bottom:6px;font-size:12px"><span style="color:var(--green)">✓</span><span style="color:var(--text2)">${w}</span></div>`).join('')}
+          <div style="font-size:10px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin:12px 0 8px;font-family:'JetBrains Mono',monospace">⚠️ Key Blockers</div>
+          ${(s.key_blockers || []).map(b => `<div style="display:flex;gap:6px;margin-bottom:6px;font-size:12px"><span style="color:var(--amber)">▲</span><span style="color:var(--text2)">${b}</span></div>`).join('')}
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace">🔁 Strategy Adjustments</div>
+          ${(s.strategy_adjustments || []).map(a => `<div style="display:flex;gap:6px;margin-bottom:6px;font-size:12px"><span style="color:var(--blue)">→</span><span style="color:var(--text2)">${a}</span></div>`).join('')}
+          <div style="margin-top:12px;padding:10px;background:var(--bdim);border:1px solid var(--bglow);border-radius:8px">
+            <div style="font-size:9px;letter-spacing:1px;color:var(--blue);text-transform:uppercase;font-family:'JetBrains Mono',monospace">Loop Stats</div>
+            <div style="font-size:13px;color:var(--white);margin-top:4px;font-family:'JetBrains Mono',monospace"><strong>${result.successes}</strong> / ${(result.steps_executed||[]).length} steps ✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('loop-results').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTO GOAL GENERATOR
+// ═══════════════════════════════════════════════════════════════════════════
+async function autoGenerateGoals() {
+  const personaId = document.getElementById('goal-persona').value;
+  const countryId = document.getElementById('goal-country').value;
+  if (!personaId || !countryId) { toast('Select persona and country', true); return; }
+
+  const el = document.getElementById('goal-result');
+  el.innerHTML = '<div style="color:var(--blue);font-size:12px">🧠 CMO generating campaign goals…</div>';
+
+  try {
+    const goals = await api('/generate/autonomous/generate-goals', 'POST', { persona_id: personaId, country_id: countryId });
+
+    el.innerHTML = `
+      <div style="margin-top:8px;background:var(--gdim);border:1px solid var(--gglow);border-radius:8px;padding:12px">
+        <div style="font-weight:700;font-size:13px;color:var(--white);margin-bottom:8px">${goals.campaign_name}</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.5">${goals.primary_goal}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <span class="tag tg">${goals.framework_focus}</span>
+          <span class="tag tb">${goals.recommended_channel}</span>
+          <span class="tag ${goals.urgency_level === 'high' ? 'tr' : goals.urgency_level === 'medium' ? 'ta' : 'tm'}">${goals.urgency_level} urgency</span>
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:10px" onclick="fillCampaignForm('${goals.campaign_name.replace(/'/g,"\'")}','${goals.framework_focus}','${goals.recommended_channel}','${goals.primary_goal.replace(/'/g,"\'")}')">
+          ↗ Use These Goals →
+        </button>
+      </div>
+    `;
+    toast('Campaign goals generated!');
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:12px">✕ ${e.message}</div>`;
+    toast(e.message, true);
+  }
+}
+
+function fillCampaignForm(name, framework, channel, goal) {
+  nav('setup');
+  setTimeout(() => {
+    const n = document.getElementById('camp-name');
+    const f = document.getElementById('camp-framework');
+    const c = document.getElementById('camp-channel');
+    const g = document.getElementById('camp-goal');
+    if (n) n.value = name;
+    if (f) f.value = framework;
+    if (c) c.value = channel;
+    if (g) g.value = goal;
+    toast('Campaign form pre-filled!');
+  }, 200);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CMO AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+async function sendCMO() {
+  const input = document.getElementById('cmo-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const msgs = document.getElementById('cmo-msgs');
+
+  // Add user message
+  msgs.innerHTML += `
+    <div class="msg user">
+      <div class="msg-av user">YOU</div>
+      <div class="msg-body">
+        <div class="msg-who">You</div>
+        <div class="msg-text">${escapeHtml(msg)}</div>
+      </div>
+    </div>
+  `;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Typing indicator
+  const typingId = `cmo-typing-${Date.now()}`;
+  msgs.innerHTML += `
+    <div class="msg" id="${typingId}">
+      <div class="msg-av bot">CMO</div>
+      <div class="msg-body">
+        <div class="msg-who">CMO Agent</div>
+        <div class="msg-text"><div style="display:flex;gap:4px;align-items:center"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>
+      </div>
+    </div>
+  `;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const resp = await api('/generate/cmo/chat', 'POST', { message: msg });
+    document.getElementById(typingId)?.remove();
+
+    msgs.innerHTML += `
+      <div class="msg">
+        <div class="msg-av bot">CMO</div>
+        <div class="msg-body">
+          <div class="msg-who">CMO Orchestrator</div>
+          <div class="msg-text">${escapeHtml(resp.reply)}</div>
+        </div>
+      </div>
+    `;
+    msgs.scrollTop = msgs.scrollHeight;
+  } catch (e) {
+    document.getElementById(typingId)?.remove();
+    msgs.innerHTML += `
+      <div class="msg">
+        <div class="msg-av bot">CMO</div>
+        <div class="msg-body">
+          <div class="msg-who">CMO Agent</div>
+          <div class="msg-text" style="color:var(--rose)">Error: ${e.message}</div>
+        </div>
+      </div>
+    `;
+    msgs.scrollTop = msgs.scrollHeight;
+    toast(e.message, true);
+  }
+}
+
+async function generateBrief() {
+  const campaignId = document.getElementById('cmo-campaign').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('cmo-brief-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Generating…';
+
+  try {
+    const result = await api(`/generate/cmo/brief/${campaignId}`, 'POST');
+    renderBriefOutput(result);
+    toast('CMO Brief generated!');
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📋 Generate CMO Brief';
+  }
+}
+
+function renderBriefOutput(result) {
+  const j = result.json_output || {};
+  const container = document.getElementById('cmo-brief-output');
+  container.innerHTML = `
+    <div class="card" style="margin-top:8px">
+      <div class="ch"><div class="ct">📋 Campaign Brief</div><span class="tag tg">✓ Generated</span></div>
+      ${j.executive_summary ? `
+        <div class="rb">
+          <div class="rb-header">Executive Summary</div>
+          <div class="rb-body">${j.executive_summary}</div>
+        </div>
+      ` : ''}
+      ${j.core_message ? `
+        <div class="rb">
+          <div class="rb-header">Core Message</div>
+          <div class="rb-body hl">"${j.core_message}"</div>
+        </div>
+      ` : ''}
+      ${j.content_pillars?.length ? `
+        <div class="rb">
+          <div class="rb-header">Content Pillars (${j.content_pillars.length})</div>
+          <div class="rb-body">${j.content_pillars.map(p => `<div style="margin-bottom:10px"><strong style="color:var(--white)">${p.pillar}</strong> — ${p.rationale}</div>`).join('')}</div>
+        </div>
+      ` : ''}
+      ${j.kpis?.length ? `
+        <div class="rb">
+          <div class="rb-header">KPIs (${j.kpis.length})</div>
+          <div class="rb-body">
+            <div class="kpi-list">
+              ${j.kpis.map(k => `
+                <div class="kpi-item">
+                  <div class="kpi-header">
+                    <span class="kpi-name">${k.metric}</span>
+                    <span class="kpi-value" style="color:var(--green)">${k.target}</span>
+                  </div>
+                  <div class="kpi-track"><div class="kpi-fill good" style="width:${Math.random()*60+20}%"></div></div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+async function runLegacyPipeline() {
+  const campaignId = document.getElementById('cmo-campaign').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('cmo-pipeline-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Running…';
+
+  try {
+    const result = await api(`/generate/cmo/pipeline/${campaignId}`, 'POST');
+    toast(`Pipeline done! ${result.total_pieces} pieces generated.`);
+    document.getElementById('cmo-brief-output').innerHTML += `
+      <div class="card" style="margin-top:8px;background:var(--gdim);border-color:var(--gglow)">
+        <div class="ct" style="margin-bottom:10px;color:var(--green)">⚡ Pipeline Complete</div>
+        <div style="font-size:12px;color:var(--text2)">${result.total_pieces} content pieces generated.</div>
+        ${Object.entries(result.generated || {}).map(([k,v]) => `<div style="font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:4px">✓ ${k}</div>`).join('')}
+        ${Object.entries(result.errors || {}).map(([k,v]) => `<div style="font-size:11px;color:var(--rose);font-family:'JetBrains Mono',monospace;margin-top:4px">✕ ${k}: ${v}</div>`).join('')}
+      </div>
+    `;
+    loadDashboard();
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Quick 5-Step Pipeline';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESEARCH AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+async function runResearch() {
+  const campaignId = document.getElementById('res-campaign').value;
+  const type = document.getElementById('res-type').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('res-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Researching…';
+  showTyping('res-typing');
+  document.getElementById('res-output').innerHTML = '';
+
+  try {
+    const endpoint = type === 'competitors'
+      ? `/generate/research/competitors/${campaignId}`
+      : `/generate/research/regulatory/${campaignId}`;
+    const result = await api(endpoint, 'POST');
+    hideTyping('res-typing');
+    renderJSONOutput('res-output', result);
+    toast('Research complete!');
+  } catch (e) {
+    hideTyping('res-typing');
+    document.getElementById('res-output').innerHTML = `<div style="color:var(--rose);padding:16px">${e.message}</div>`;
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔬 Run Research Agent';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTENT AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+function updateGenUI() {
+  const type = document.getElementById('gen-type').value;
+  const blogSel = document.getElementById('gen-blog-selector');
+  blogSel.style.display = type === 'blog' ? 'block' : 'none';
+
+  if (type === 'blog') {
+    loadLinkedInContentForBlog();
+  }
+}
+
+async function loadLinkedInContentForBlog() {
+  try {
+    const items = await api('/content/?type=linkedin');
+    const sel = document.getElementById('gen-linkedin-source');
+    sel.innerHTML = '<option value="">— select LinkedIn post —</option>';
+    items.forEach(i => {
+      const o = document.createElement('option');
+      o.value = i.id;
+      o.textContent = i.headline?.slice(0, 60) || `Post ${i.id.slice(0, 8)}`;
+      sel.appendChild(o);
+    });
+  } catch (e) {
+    console.warn('Could not load LinkedIn content');
+  }
+}
+
+async function generateContent() {
+  const campaignId = document.getElementById('gen-campaign').value;
+  const type = document.getElementById('gen-type').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Generating…';
+  showTyping('gen-typing');
+  document.getElementById('gen-output').innerHTML = '';
+  document.getElementById('gen-extra-output').innerHTML = '';
+  clearLog('gen-log');
+  addLog('gen-log', '⚡', 'Content Agent activated…', 'info');
+
+  try {
+    if (type === 'linkedin') {
+      addLog('gen-log', '✍️', 'Generating LinkedIn post…');
+      const r = await api(`/generate/linkedin/${campaignId}`, 'POST');
+      hideTyping('gen-typing');
+      approveTargetId = r.id;
+      renderContentOutput(r);
+      addLog('gen-log', '✓', 'LinkedIn post ready', 'success');
+    } else if (type === 'blog') {
+      const srcId = document.getElementById('gen-linkedin-source').value;
+      if (!srcId) { toast('Select a source LinkedIn post', true); btn.disabled=false; btn.innerHTML='⚡ Generate'; return; }
+      addLog('gen-log', '📝', 'Expanding LinkedIn → Blog…');
+      const r = await api(`/generate/blog-from-linkedin/${srcId}`, 'POST');
+      hideTyping('gen-typing');
+      approveTargetId = r.id;
+      renderContentOutput(r);
+      addLog('gen-log', '✓', 'Blog article ready', 'success');
+    } else if (type === 'twitter') {
+      addLog('gen-log', '🐦', 'Generating Twitter/X thread…');
+      const r = await api(`/generate/twitter/${campaignId}`, 'POST');
+      hideTyping('gen-typing');
+      approveTargetId = r.id;
+      renderContentOutput(r);
+      addLog('gen-log', '✓', 'Twitter thread ready', 'success');
+    } else if (type === 'linkedin+blog') {
+      addLog('gen-log', '✍️', 'Generating LinkedIn post…');
+      const li = await api(`/generate/linkedin/${campaignId}`, 'POST');
+      addLog('gen-log', '📝', 'Expanding to blog article…');
+      const blog = await api(`/generate/blog-from-linkedin/${li.id}`, 'POST');
+      hideTyping('gen-typing');
+      approveTargetId = li.id;
+      renderContentOutput(li);
+      document.getElementById('gen-extra-output').innerHTML = `
+        <div style="margin-top:8px;font-size:12px;color:var(--green);font-family:'JetBrains Mono',monospace">✓ Blog also generated — check Content Library</div>
+      `;
+      addLog('gen-log', '✓', 'LinkedIn + Blog pipeline complete', 'success');
+    }
+    toast('Content generated!');
+    loadDashboard();
+  } catch (e) {
+    hideTyping('gen-typing');
+    document.getElementById('gen-output').innerHTML = `<div style="color:var(--rose);padding:16px">${e.message}</div>`;
+    addLog('gen-log', '✕', e.message, 'error');
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Generate';
+  }
+}
+
+function renderContentOutput(result) {
+  const j = result.json_output || {};
+  const container = document.getElementById('gen-output');
+
+  if (j.hook || j.body || j.cta || j.hashtags) {
+    // LinkedIn
+    container.innerHTML = `
+      ${j.hook ? `<div class="rb"><div class="rb-header">Hook</div><div class="rb-body hl">${escapeHtml(j.hook)}</div></div>` : ''}
+      ${j.body ? `<div class="rb"><div class="rb-header">Body</div><div class="rb-body">${escapeHtml(j.body)}</div></div>` : ''}
+      ${j.cta ? `<div class="rb"><div class="rb-header">CTA</div><div class="rb-body" style="color:var(--green)">${escapeHtml(j.cta)}</div></div>` : ''}
+      ${j.hashtags?.length ? `<div class="rb"><div class="rb-header">Hashtags</div><div class="rb-body">${j.hashtags.map(h => `<span style="color:var(--blue);margin-right:6px">${h}</span>`).join('')}</div></div>` : ''}
+    `;
+  } else if (j.title || j.intro || j.sections) {
+    // Blog
+    container.innerHTML = `
+      ${j.title ? `<div class="rb"><div class="rb-header">Title</div><div class="rb-body hl">${escapeHtml(j.title)}</div></div>` : ''}
+      ${j.intro ? `<div class="rb"><div class="rb-header">Introduction</div><div class="rb-body">${escapeHtml(j.intro)}</div></div>` : ''}
+      ${j.sections?.length ? j.sections.map(s => `
+        <div class="rb">
+          <div class="rb-header">${escapeHtml(s.heading || '')}</div>
+          <div class="rb-body">${escapeHtml(s.content || '')}</div>
+        </div>
+      `).join('') : ''}
+    `;
+  } else {
+    container.innerHTML = `<div class="rb-body" style="padding:16px;white-space:pre-wrap">${escapeHtml(result.body || JSON.stringify(j, null, 2))}</div>`;
+  }
+}
+
+async function approveContent() {
+  if (!approveTargetId) { toast('Generate content first', true); return; }
+  try {
+    await api(`/content/${approveTargetId}/status`, 'PATCH', { status: 'approved' });
+    toast('Content approved!');
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+function clearGen() {
+  document.getElementById('gen-output').innerHTML = '<div class="empty"><div class="empty-icon">✍️</div><div class="empty-text">Configure and hit Generate</div></div>';
+  document.getElementById('gen-extra-output').innerHTML = '';
+  clearLog('gen-log');
+  addLog('gen-log', '🤖', 'Content Agent ready.');
+  approveTargetId = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEO AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+function updateSEOUI() {
+  const action = document.getElementById('seo-action').value;
+  const contentSel = document.getElementById('seo-content-selector');
+  contentSel.style.display = action === 'optimize' ? 'block' : 'none';
+  if (action === 'optimize') loadContentForSEO();
+}
+
+async function loadContentForSEO() {
+  try {
+    const items = await api('/content/');
+    const sel = document.getElementById('seo-content-source');
+    sel.innerHTML = '<option value="">— select content —</option>';
+    items.filter(i => ['linkedin', 'blog', 'twitter'].includes(i.type)).forEach(i => {
+      const o = document.createElement('option');
+      o.value = i.id;
+      o.textContent = `[${i.type}] ${i.headline?.slice(0, 50) || i.id.slice(0, 8)}`;
+      sel.appendChild(o);
+    });
+  } catch (e) { console.warn('Load error'); }
+}
+
+async function runSEO() {
+  const campaignId = document.getElementById('seo-campaign').value;
+  const action = document.getElementById('seo-action').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('seo-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Analyzing…';
+  showTyping('seo-typing');
+  document.getElementById('seo-output').innerHTML = '';
+
+  try {
+    let result;
+    if (action === 'keywords') {
+      result = await api(`/generate/seo/keywords/${campaignId}`, 'POST');
+    } else {
+      const contentId = document.getElementById('seo-content-source').value;
+      if (!contentId) { toast('Select content to optimize', true); return; }
+      result = await api(`/generate/seo/optimize/${contentId}`, 'POST');
+    }
+    hideTyping('seo-typing');
+    renderJSONOutput('seo-output', result);
+    toast('SEO analysis complete!');
+  } catch (e) {
+    hideTyping('seo-typing');
+    document.getElementById('seo-output').innerHTML = `<div style="color:var(--rose);padding:16px">${e.message}</div>`;
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔍 Run SEO Agent';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADS AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+async function runAds() {
+  const campaignId = document.getElementById('ads-campaign').value;
+  const type = document.getElementById('ads-type').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('ads-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Crafting…';
+  showTyping('ads-typing');
+  document.getElementById('ads-output').innerHTML = '';
+
+  try {
+    const endpoint = type === 'google'
+      ? `/generate/ads/google/${campaignId}`
+      : `/generate/ads/linkedin/${campaignId}`;
+    const result = await api(endpoint, 'POST');
+    hideTyping('ads-typing');
+    renderAdsOutput('ads-output', result);
+    toast('Ads generated!');
+  } catch (e) {
+    hideTyping('ads-typing');
+    document.getElementById('ads-output').innerHTML = `<div style="color:var(--rose);padding:16px">${e.message}</div>`;
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🎯 Generate Ads';
+  }
+}
+
+function renderAdsOutput(containerId, result) {
+  const j = result.json_output || {};
+  const container = document.getElementById(containerId);
+  const variants = j.variants || j.ads || j.ad_variants || [];
+
+  if (variants.length) {
+    container.innerHTML = variants.map((v, i) => `
+      <div class="rb">
+        <div class="rb-header">Variant ${i + 1} — ${v.variant || v.name || `Ad ${i+1}`}</div>
+        <div class="rb-body">
+          ${v.headline_1 || v.headline ? `<div style="font-weight:700;color:var(--white);margin-bottom:4px">${v.headline_1 || v.headline}</div>` : ''}
+          ${v.headline_2 ? `<div style="font-weight:600;margin-bottom:4px">${v.headline_2}</div>` : ''}
+          ${v.description_1 || v.description ? `<div style="color:var(--text2)">${v.description_1 || v.description}</div>` : ''}
+          ${v.cta ? `<div style="color:var(--green);margin-top:6px;font-weight:600">${v.cta}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  } else {
+    container.innerHTML = `<div class="rb-body" style="padding:16px;white-space:pre-wrap">${escapeHtml(result.body || JSON.stringify(j, null, 2))}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ANALYTICS AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+async function runAnalytics() {
+  const campaignId = document.getElementById('ana-campaign').value;
+  const type = document.getElementById('ana-type').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('ana-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Analyzing…';
+  showTyping('ana-typing');
+  document.getElementById('ana-output').innerHTML = '';
+
+  try {
+    const endpoint = type === 'performance'
+      ? `/generate/analytics/performance/${campaignId}`
+      : `/generate/analytics/ab-test/${campaignId}`;
+    const result = await api(endpoint, 'POST');
+    hideTyping('ana-typing');
+    renderAnalyticsOutput('ana-output', result);
+    toast('Analytics complete!');
+  } catch (e) {
+    hideTyping('ana-typing');
+    document.getElementById('ana-output').innerHTML = `<div style="color:var(--rose);padding:16px">${e.message}</div>`;
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📊 Run Analytics';
+  }
+}
+
+function renderAnalyticsOutput(containerId, result) {
+  const j = result.json_output || {};
+  const container = document.getElementById(containerId);
+
+  if (j.performance_score !== undefined) {
+    const score = j.performance_score;
+    const scoreClass = score >= 7 ? 'good' : score >= 5 ? 'ok' : 'bad';
+
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+        <div class="score-badge ${scoreClass}">${score}/10</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:var(--white)">${j.budget_signal ? `Budget Signal: ${j.budget_signal.toUpperCase()}` : 'Performance Report'}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:3px">${j.top_performing || ''}</div>
+        </div>
+      </div>
+      ${j.kpi_analysis?.length ? `
+        <div class="rb">
+          <div class="rb-header">KPI Analysis</div>
+          <div class="rb-body">
+            <div class="kpi-list">
+              ${j.kpi_analysis.map(k => {
+                const colorClass = k.status === 'ahead' ? 'good' : k.status === 'on_track' ? 'good' : 'warn';
+                return `
+                  <div class="kpi-item">
+                    <div class="kpi-header">
+                      <span class="kpi-name">${k.metric}</span>
+                      <span class="kpi-value" style="color:var(--${colorClass === 'good' ? 'green' : 'amber'})">${k.current_value} / ${k.target}</span>
+                    </div>
+                    <div class="kpi-track"><div class="kpi-fill ${colorClass}" style="width:${Math.random()*50+30}%"></div></div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      ` : ''}
+      ${j.recommendations?.length ? `
+        <div class="rb">
+          <div class="rb-header">Recommendations (${j.recommendations.length})</div>
+          <div class="rb-body">
+            ${j.recommendations.map(r => `
+              <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start">
+                <span class="tag ${r.priority === 'high' ? 'tr' : r.priority === 'medium' ? 'ta' : 'tm'}" style="flex-shrink:0">${r.priority}</span>
+                <div><div style="font-weight:600;color:var(--white)">${r.action}</div><div style="font-size:11px;color:var(--text2)">${r.expected_impact} — ${r.agent}</div></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      ${j.next_loop_focus ? `
+        <div class="rb" style="border-color:var(--gglow)">
+          <div class="rb-header" style="color:var(--green)">Next Loop Focus</div>
+          <div class="rb-body" style="color:var(--white);font-weight:600">${j.next_loop_focus}</div>
+        </div>
+      ` : ''}
+    `;
+  } else if (j.statistical_winner) {
+    container.innerHTML = `
+      <div class="rb" style="border-color:var(--gglow)">
+        <div class="rb-header">🏆 A/B Test Winner</div>
+        <div class="rb-body hl">${j.statistical_winner}</div>
+      </div>
+      ${j.winning_factors?.length ? `
+        <div class="rb">
+          <div class="rb-header">Why it Won</div>
+          <div class="rb-body">${j.winning_factors.map(f => `<div style="margin-bottom:5px">✓ ${f}</div>`).join('')}</div>
+        </div>
+      ` : ''}
+      ${j.scale_recommendation ? `
+        <div class="rb">
+          <div class="rb-header">Scale Recommendation</div>
+          <div class="rb-body" style="color:var(--green)">${j.scale_recommendation}</div>
+        </div>
+      ` : ''}
+      ${j.new_hypothesis ? `
+        <div class="rb">
+          <div class="rb-header">Next Test Hypothesis</div>
+          <div class="rb-body">${j.new_hypothesis}</div>
+        </div>
+      ` : ''}
+    `;
+  } else {
+    container.innerHTML = `<div class="rb-body" style="padding:16px;white-space:pre-wrap">${escapeHtml(JSON.stringify(j, null, 2))}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUDGET AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+async function runBudget() {
+  const campaignId = document.getElementById('bud-campaign').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('bud-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Optimizing…';
+  showTyping('bud-typing');
+  document.getElementById('bud-output').innerHTML = '';
+
+  try {
+    const result = await api(`/generate/budget/optimize/${campaignId}`, 'POST');
+    hideTyping('bud-typing');
+    renderBudgetOutput('bud-output', result);
+    toast('Budget optimization complete!');
+  } catch (e) {
+    hideTyping('bud-typing');
+    document.getElementById('bud-output').innerHTML = `<div style="color:var(--rose);padding:16px">${e.message}</div>`;
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '💰 Optimize Budget';
+  }
+}
+
+function renderBudgetOutput(containerId, result) {
+  const j = result.json_output || {};
+  const container = document.getElementById(containerId);
+
+  container.innerHTML = `
+    ${j.total_budget_efficiency_gain ? `
+      <div style="padding:14px;background:var(--gdim);border:1px solid var(--gglow);border-radius:var(--radius);margin-bottom:12px;display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--green)">${j.total_budget_efficiency_gain}</div>
+        <div>
+          <div style="font-weight:700;color:var(--white)">Projected Efficiency Gain</div>
+          <div style="font-size:11px;color:var(--text2)">7d ROI: ${j.roi_forecast_7d || '—'} · 30d ROI: ${j.roi_forecast_30d || '—'}</div>
+        </div>
+      </div>
+    ` : ''}
+    ${j.budget_moves?.length ? `
+      <div class="rb">
+        <div class="rb-header">Budget Moves (${j.budget_moves.length})</div>
+        <div class="rb-body">
+          ${j.budget_moves.map(m => `
+            <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;font-size:12px">
+              <span style="color:var(--amber)">→</span>
+              <div><strong>${m.action}:</strong> Move ${m.amount_pct}% from <span style="color:var(--rose)">${m.from_channel}</span> → <span style="color:var(--green)">${m.to_channel}</span>. ${m.reasoning}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+    ${j.channels_to_scale?.length ? `
+      <div class="rb">
+        <div class="rb-header" style="color:var(--green)">↑ Scale</div>
+        <div class="rb-body">${j.channels_to_scale.map(c => `<span style="color:var(--green);margin-right:8px">✓ ${c}</span>`).join('')}</div>
+      </div>
+    ` : ''}
+    ${j.channels_to_pause?.length ? `
+      <div class="rb">
+        <div class="rb-header" style="color:var(--rose)">⏸ Pause</div>
+        <div class="rb-body">${j.channels_to_pause.map(c => `<span style="color:var(--rose);margin-right:8px">✕ ${c}</span>`).join('')}</div>
+      </div>
+    ` : ''}
+    ${j.auto_rules?.length ? `
+      <div class="rb">
+        <div class="rb-header">Automation Rules</div>
+        <div class="rb-body">${j.auto_rules.map(r => `<div style="margin-bottom:4px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2)">⚡ ${r}</div>`).join('')}</div>
+      </div>
+    ` : ''}
+    ${j.risk_flags?.length ? `
+      <div class="rb">
+        <div class="rb-header" style="color:var(--amber)">⚠️ Risk Flags</div>
+        <div class="rb-body">${j.risk_flags.map(r => `<div style="margin-bottom:4px;color:var(--amber);font-size:12px">▲ ${r}</div>`).join('')}</div>
+      </div>
+    ` : ''}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DISTRIBUTION AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+async function runDistribution() {
+  const campaignId = document.getElementById('dis-campaign').value;
+  if (!campaignId) { toast('Select a campaign', true); return; }
+
+  const btn = document.getElementById('dis-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Planning…';
+  showTyping('dis-typing');
+  document.getElementById('dis-output').innerHTML = '';
+
+  try {
+    const result = await api(`/generate/distribution/plan/${campaignId}`, 'POST');
+    hideTyping('dis-typing');
+    renderDistributionOutput('dis-output', result);
+    toast('Distribution plan ready!');
+  } catch (e) {
+    hideTyping('dis-typing');
+    document.getElementById('dis-output').innerHTML = `<div style="color:var(--rose);padding:16px">${e.message}</div>`;
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📣 Generate Distribution Plan';
+  }
+}
+
+function renderDistributionOutput(containerId, result) {
+  const j = result.json_output || {};
+  const container = document.getElementById(containerId);
+
+  container.innerHTML = `
+    ${j.quick_wins?.length ? `
+      <div style="padding:12px;background:var(--gdim);border:1px solid var(--gglow);border-radius:var(--radius);margin-bottom:12px">
+        <div style="font-size:9px;letter-spacing:1.5px;color:var(--green);text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px">⚡ Quick Wins — Next 24 Hours</div>
+        ${j.quick_wins.map(w => `<div style="margin-bottom:4px;font-size:12px;color:var(--white)">→ ${w}</div>`).join('')}
+      </div>
+    ` : ''}
+    ${j.weekly_schedule?.length ? `
+      <div class="rb">
+        <div class="rb-header">7-Day Schedule</div>
+        <div class="rb-body" style="padding:10px">
+          <table class="tbl">
+            <thead><tr><th>Day</th><th>Channel</th><th>Time</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${j.weekly_schedule.map(d => `
+                <tr>
+                  <td style="font-weight:600;color:var(--white)">${d.day}</td>
+                  <td><span class="tag tg">${d.channel}</span></td>
+                  <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${d.time}</td>
+                  <td style="color:var(--text2)">${(d.actions || []).join('; ')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ` : ''}
+    ${j.email_flow?.length ? `
+      <div class="rb">
+        <div class="rb-header">Email Nurture Sequence</div>
+        <div class="rb-body">
+          ${j.email_flow.map(e => `
+            <div style="margin-bottom:12px;padding:10px;background:var(--surface);border-radius:6px">
+              <div style="font-weight:600;color:var(--white)">Email ${e.email_number}: ${escapeHtml(e.subject)}</div>
+              <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin:3px 0">Trigger: ${e.trigger} · Send: ${e.send_timing}</div>
+              <div style="font-size:12px;color:var(--text2)">${e.goal}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+    ${j.amplification_tactics?.length ? `
+      <div class="rb">
+        <div class="rb-header">Amplification Tactics</div>
+        <div class="rb-body">${j.amplification_tactics.map(t => `<div style="margin-bottom:5px;font-size:12px">● ${t}</div>`).join('')}</div>
+      </div>
+    ` : ''}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GENERIC JSON RENDERER
+// ═══════════════════════════════════════════════════════════════════════════
+function renderJSONOutput(containerId, result) {
+  const j = result.json_output || {};
+  const container = document.getElementById(containerId);
+
+  const sections = Object.entries(j);
+  if (!sections.length) {
+    container.innerHTML = `<div class="rb-body" style="padding:16px">${escapeHtml(result.body || '(no output)')}</div>`;
+    return;
+  }
+
+  container.innerHTML = sections.map(([key, val]) => {
+    const label = key.replace(/_/g, ' ').toUpperCase();
+    let content = '';
+    if (Array.isArray(val)) {
+      content = val.map(item =>
+        typeof item === 'string'
+          ? `<div style="margin-bottom:4px">• ${escapeHtml(item)}</div>`
+          : typeof item === 'object'
+          ? `<div style="margin-bottom:8px;padding:8px;background:var(--surface);border-radius:6px;font-size:11px">${Object.entries(item).map(([k,v]) => `<span style="color:var(--text3)">${k}:</span> ${escapeHtml(String(v))} `).join('')}</div>`
+          : escapeHtml(String(item))
+      ).join('');
+    } else if (typeof val === 'object') {
+      content = `<pre style="font-size:11px;white-space:pre-wrap">${escapeHtml(JSON.stringify(val, null, 2))}</pre>`;
+    } else {
+      content = escapeHtml(String(val));
+    }
+    return `<div class="rb"><div class="rb-header">${label}</div><div class="rb-body">${content}</div></div>`;
+  }).join('');
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIVE LOG — Server-Sent Events from backend
+// ═══════════════════════════════════════════════════════════════════════════
+let _liveLogES = null;
+
+function initLiveLog() {
+  const statusEl = document.getElementById('sse-status');
+  const logEl    = document.getElementById('live-log');
+
+  if (_liveLogES) { _liveLogES.close(); }
+
+  _liveLogES = new EventSource(API + '/logs/stream');
+
+  _liveLogES.onopen = function() {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--green)">● live</span>';
+  };
+
+  _liveLogES.onerror = function() {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--rose)">● disconnected — retrying…</span>';
+    // Browser auto-retries SSE
+  };
+
+  _liveLogES.onmessage = function(e) {
+    try {
+      const entry = JSON.parse(e.data);
+      appendLiveLog(entry);
+    } catch(err) { /* ignore malformed */ }
+  };
+}
+
+function appendLiveLog(entry) {
+  const logEl = document.getElementById('live-log');
+  if (!logEl) return;
+
+  // Also push into loop-log and gen-log when those panels are visible
+  const loopLog = document.getElementById('loop-log');
+  const genLog  = document.getElementById('gen-log');
+
+  const levelColor = {
+    success : 'var(--green)',
+    error   : 'var(--rose)',
+    warn    : 'var(--amber)',
+    info    : 'var(--text2)',
+  }[entry.level] || 'var(--text2)';
+
+  const html = `<div class="log-entry">
+    <span class="log-ts">${entry.ts}</span>
+    <span class="log-icon">${entry.icon}</span>
+    <span class="log-text" style="color:${levelColor}">${escapeHtml(entry.text)}</span>
+  </div>`;
+
+  // Append to live-log
+  logEl.insertAdjacentHTML('beforeend', html);
+  logEl.scrollTop = logEl.scrollHeight;
+  // Keep max 150 entries
+  while (logEl.children.length > 150) logEl.removeChild(logEl.firstChild);
+
+  // Mirror to visible agent-specific logs
+  if (loopLog) { loopLog.insertAdjacentHTML('beforeend', html); loopLog.scrollTop = loopLog.scrollHeight; }
+  if (genLog)  { genLog.insertAdjacentHTML('beforeend', html);  genLog.scrollTop  = genLog.scrollHeight; }
+}
+
+function clearLiveLog() {
+  const logEl = document.getElementById('live-log');
+  if (logEl) logEl.innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOAST ALIAS
+// ═══════════════════════════════════════════════════════════════════════════
+function showToast(msg, isErr) { toast(msg, isErr || false); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CREATIVE AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'creative-campaign') {
+    const cid = e.target.value;
+    const sel = document.getElementById('creative-content-id');
+    if (!sel) return;
+    if (!cid) { sel.innerHTML = '<option value="">— select campaign first —</option>'; return; }
+    api('/content/?campaign_id=' + cid).then(items => {
+      sel.innerHTML = '<option value="">— select content piece —</option>';
+      items.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.id;
+        o.textContent = (r.type||'') + ' — ' + (r.headline||'').slice(0,60);
+        sel.appendChild(o);
+      });
+    }).catch(function(){});
+  }
+});
+
+async function generateCreativeForContent() {
+  const contentId = document.getElementById('creative-content-id').value;
+  if (!contentId) { showToast('Please select a content piece first', true); return; }
+  const out = document.getElementById('creative-output');
+  out.innerHTML = '';
+  showTyping('creative-typing');
+  try {
+    const result = await api('/generate/creative/for-content/' + contentId, 'POST');
+    hideTyping('creative-typing');
+    renderCreativeOutput(result);
+    showToast('Multimedia generated!');
+  } catch(e) {
+    hideTyping('creative-typing');
+    out.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error: ' + escapeHtml(e.message) + '</div></div>';
+    showToast(e.message, true);
+  }
+}
+
+async function generateCampaignCreative() {
+  const campaignId = document.getElementById('creative-camp-campaign').value;
+  if (!campaignId) { showToast('Please select a campaign first', true); return; }
+  const out = document.getElementById('creative-output');
+  out.innerHTML = '';
+  showTyping('creative-typing');
+  try {
+    const result = await api('/generate/creative/campaign/' + campaignId, 'POST');
+    hideTyping('creative-typing');
+    renderCreativeOutput(result);
+    showToast('Full visual pack generated!');
+  } catch(e) {
+    hideTyping('creative-typing');
+    out.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error: ' + escapeHtml(e.message) + '</div></div>';
+    showToast(e.message, true);
+  }
+}
+
+function renderCreativeOutput(result) {
+  const container = document.getElementById('creative-output');
+  const j = result.json_output || {};
+  let html = '<div class="rb"><div class="rb-header">CREATIVE PACKAGE</div><div class="rb-body">' + escapeHtml(result.headline || '') + '<br><br>' + escapeHtml(result.body || '') + '</div></div>';
+
+  const img = j.generated_image || j.generated_hero_image;
+  if (img && img.success && img.url) {
+    html += '<div class="rb"><div class="rb-header">GENERATED IMAGE (DALL-E 3)</div><div class="rb-body"><img src="' + img.url + '" style="max-width:100%;border-radius:8px;border:1px solid var(--border2)" alt="Generated"><div style="font-size:11px;color:var(--amber);margin-top:8px">URL expires in ~1 hour. Right-click to save.</div></div></div>';
+  } else if (img && !img.success) {
+    html += '<div class="rb"><div class="rb-header">IMAGE PROMPT (use in Midjourney/Canva)</div><div class="rb-body"><div style="background:var(--surface);padding:12px;border-radius:6px;font-size:11.5px;white-space:pre-wrap">' + escapeHtml(img.prompt_for_manual_generation || j.primary_image_prompt || j.hero_prompt || '') + '</div></div></div>';
+  }
+
+  var promptKeys = ['primary_image_prompt','hero_prompt','linkedin_post_prompt','linkedin_banner_prompt','google_display_prompt','twitter_header_prompt','email_header_prompt'];
+  var available = promptKeys.filter(function(k){ return !!j[k]; });
+  if (available.length) {
+    html += '<div class="rb"><div class="rb-header">PLATFORM PROMPTS</div><div class="rb-body">';
+    available.forEach(function(k) {
+      html += '<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">' + k.replace(/_/g,' ') + '</div><div style="background:var(--surface);padding:10px;border-radius:6px;font-size:11.5px;white-space:pre-wrap">' + escapeHtml(j[k]) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  if (j.video_script) {
+    const vs = j.video_script;
+    html += '<div class="rb"><div class="rb-header">VIDEO SCRIPT — ' + escapeHtml(vs.title||'') + ' (' + (vs.duration_seconds||0) + 's)</div><div class="rb-body">';
+    html += '<div style="color:var(--amber);margin-bottom:8px"><strong>Hook:</strong> ' + escapeHtml(vs.hook||'') + '</div>';
+    if (vs.scenes) vs.scenes.forEach(function(s) {
+      html += '<div style="background:var(--surface);padding:10px;border-radius:6px;margin-bottom:8px;font-size:11.5px"><strong style="color:var(--green)">Scene ' + s.scene_number + ' (' + s.duration_seconds + 's)</strong><br>🎥 ' + escapeHtml(s.visual_description||'') + '<br>🎙️ <em>' + escapeHtml(s.voiceover_text||'') + '</em></div>';
+    });
+    if (vs.cta_scene) html += '<div style="background:var(--gdim);border:1px solid var(--gglow);padding:10px;border-radius:6px;font-size:11.5px"><strong style="color:var(--green)">CTA</strong> ' + escapeHtml(vs.cta_scene.voiceover||'') + ' | ' + escapeHtml(vs.cta_scene.text_overlay||'') + '</div>';
+    html += '</div></div>';
+  }
+
+  if (j.color_palette && j.color_palette.length) {
+    html += '<div class="rb"><div class="rb-header">COLOR PALETTE</div><div class="rb-body" style="display:flex;gap:10px;flex-wrap:wrap">';
+    j.color_palette.forEach(function(c) {
+      html += '<div style="text-align:center"><div style="width:44px;height:44px;border-radius:6px;background:' + escapeHtml(c.hex) + ';border:1px solid var(--border2);margin-bottom:4px"></div><div style="font-size:10px;font-family:monospace;color:var(--green)">' + escapeHtml(c.hex) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  ['image_alt_text','social_caption','design_notes','creative_rationale'].forEach(function(k) {
+    if (j[k]) html += '<div class="rb"><div class="rb-header">' + k.replace(/_/g,' ').toUpperCase() + '</div><div class="rb-body">' + escapeHtml(String(j[k])) + '</div></div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROSPECT HUNTER
+// ═══════════════════════════════════════════════════════════════════════════
+async function huntProspects() {
+  const countryVal = document.getElementById('hunt-country-name').value;
+  const persona    = document.getElementById('hunt-persona').value;
+  const industry   = document.getElementById('hunt-industry').value;
+  const campaignId = document.getElementById('hunt-campaign').value;
+  if (!countryVal) { showToast('Select a country', true); return; }
+  const parts = countryVal.split(',');
+  const countryName = parts[0];
+  const cluster = parts[1] || 'CLUSTER_A';
+  const out = document.getElementById('prospects-output');
+  out.innerHTML = '';
+  showTyping('prospects-typing');
+  try {
+    const result = await api('/generate/prospects/hunt', 'POST', {
+      country_name: countryName, cluster: cluster, persona_name: persona,
+      industry_focus: industry, campaign_id: campaignId || null
+    });
+    hideTyping('prospects-typing');
+    renderProspectsOutput(result);
+    showToast('Prospects found!');
+  } catch(e) {
+    hideTyping('prospects-typing');
+    out.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error: ' + escapeHtml(e.message) + '</div></div>';
+    showToast(e.message, true);
+  }
+}
+
+async function scoreProspect() {
+  const company = document.getElementById('score-company').value.trim();
+  const country = document.getElementById('score-country').value.trim();
+  if (!company || !country) { showToast('Enter company name and country', true); return; }
+  const out = document.getElementById('prospects-output');
+  out.innerHTML = '';
+  showTyping('prospects-typing');
+  try {
+    const result = await api('/generate/prospects/score', 'POST', { company_name: company, country: country });
+    hideTyping('prospects-typing');
+    renderProspectsOutput(result);
+    showToast('Company scored!');
+  } catch(e) {
+    hideTyping('prospects-typing');
+    out.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error: ' + escapeHtml(e.message) + '</div></div>';
+    showToast(e.message, true);
+  }
+}
+
+function renderProspectsOutput(result) {
+  const container = document.getElementById('prospects-output');
+  const j = result.json_output || {};
+  let html = '<div class="rb"><div class="rb-header">PROSPECT INTELLIGENCE</div><div class="rb-body">' + escapeHtml(result.headline||'') + '<br><br>' + escapeHtml(result.body||j.market_overview||'') + '</div></div>';
+
+  if (j.prospect_companies && j.prospect_companies.length) {
+    html += '<div class="rb"><div class="rb-header">PRODUCT-QUALIFIED COMPANIES (' + j.prospect_companies.length + ')</div><div class="rb-body">';
+    j.prospect_companies.forEach(function(p, i) {
+      const pColor = p.outreach_priority === 'hot' ? 'var(--rose)' : p.outreach_priority === 'warm' ? 'var(--amber)' : 'var(--text3)';
+      html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">';
+      html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><strong>' + (i+1) + '. ' + escapeHtml(p.company_name) + '</strong><span style="color:' + pColor + ';font-size:11px;font-weight:600;text-transform:uppercase">' + escapeHtml(p.outreach_priority||'') + ' ' + (p.qualification_score||0) + '/10</span></div>';
+      html += '<div style="font-size:11px;color:var(--text2);margin-bottom:6px">🏭 ' + escapeHtml(p.industry||'') + ' · 👥 ' + escapeHtml(p.employees_estimate||'') + ' · 📍 ' + escapeHtml(p.headquarters||'') + '</div>';
+      html += '<div style="font-size:11.5px;margin-bottom:4px"><span style="color:var(--text3)">Pain:</span> ' + escapeHtml(p.pain_point||'') + '</div>';
+      html += '<div style="font-size:11.5px;margin-bottom:4px"><span style="color:var(--amber)">Trigger:</span> ' + escapeHtml(p.trigger_event||'') + '</div>';
+      html += '<div style="font-size:11px;color:var(--text3);background:var(--surface);padding:6px;border-radius:4px;font-family:monospace;margin-top:6px">LinkedIn: ' + escapeHtml(p.linkedin_search_query||'') + '</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  if (j.qualification_score !== undefined && !j.prospect_companies) {
+    const sc = j.qualification_score;
+    const col = sc >= 70 ? 'var(--green)' : sc >= 50 ? 'var(--amber)' : 'var(--rose)';
+    html += '<div class="rb"><div class="rb-header">QUALIFICATION SCORE</div><div class="rb-body"><div style="font-size:48px;font-weight:900;color:' + col + ';font-family:Bebas Neue,sans-serif">' + sc + '/100</div>';
+    html += '<div style="font-size:12px;margin-top:8px">Fit: <strong>' + escapeHtml(j.fit_assessment||'') + '</strong> · Urgency: <strong>' + (j.urgency_score||0) + '/10</strong> · Budget: <strong>' + escapeHtml(j.budget_likelihood||'') + '</strong></div></div></div>';
+    if (j.recommended_approach) html += '<div class="rb"><div class="rb-header">RECOMMENDED APPROACH</div><div class="rb-body">' + escapeHtml(j.recommended_approach) + '</div></div>';
+    if (j.suggested_subject_line) html += '<div class="rb"><div class="rb-header">SUGGESTED SUBJECT LINE</div><div class="rb-body" style="color:var(--green);font-size:14px;font-weight:600">' + escapeHtml(j.suggested_subject_line) + '</div></div>';
+  }
+
+  if (j.buying_signals && j.buying_signals.length) {
+    html += '<div class="rb"><div class="rb-header">BUYING SIGNALS</div><div class="rb-body">' + j.buying_signals.map(function(s){ return '<div style="margin-bottom:5px">• ' + escapeHtml(s) + '</div>'; }).join('') + '</div></div>';
+  }
+  container.innerHTML = html;
+}
+
+async function loadProspectListsIntoSelect() {
+  try {
+    const items = await api('/content/?type=prospect_list');
+    const sel = document.getElementById('bulk-prospect-list');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— select prospect list —</option>';
+    items.forEach(function(r) {
+      const o = document.createElement('option');
+      o.value = r.id;
+      o.textContent = r.headline || r.id;
+      sel.appendChild(o);
+    });
+  } catch(e) { console.warn('loadProspectLists error:', e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OUTREACH AGENT
+// ═══════════════════════════════════════════════════════════════════════════
+async function generateOutreachSequence() {
+  const company    = document.getElementById('out-company').value.trim();
+  const industry   = document.getElementById('out-industry').value.trim();
+  const country    = document.getElementById('out-country').value.trim();
+  const title      = document.getElementById('out-title').value.trim();
+  const pain       = document.getElementById('out-pain').value.trim();
+  const trigger    = document.getElementById('out-trigger').value.trim();
+  const persona    = document.getElementById('out-persona').value;
+  const campaignId = document.getElementById('out-campaign').value;
+  if (!company || !country || !title) { showToast('Company, country and title are required', true); return; }
+  const out = document.getElementById('outreach-output');
+  out.innerHTML = '';
+  showTyping('outreach-typing');
+  try {
+    const result = await api('/generate/outreach/sequence', 'POST', {
+      company_name: company, country: country, persona_name: persona,
+      pain_point: pain || 'ESG reporting complexity',
+      trigger_event: trigger || 'CSRD deadline approaching',
+      decision_maker_title: title, campaign_id: campaignId || null
+    });
+    hideTyping('outreach-typing');
+    renderOutreachOutput(result);
+    showToast('Outreach sequence written!');
+  } catch(e) {
+    hideTyping('outreach-typing');
+    out.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error: ' + escapeHtml(e.message) + '</div></div>';
+    showToast(e.message, true);
+  }
+}
+
+async function generateBulkOutreach() {
+  const listId     = document.getElementById('bulk-prospect-list').value;
+  const topN       = parseInt(document.getElementById('bulk-max').value) || 5;
+  const campaignId = document.getElementById('bulk-campaign').value;
+  if (!listId) { showToast('Select a prospect list first', true); return; }
+  const out = document.getElementById('outreach-output');
+  out.innerHTML = '';
+  showTyping('outreach-typing');
+  try {
+    const result = await api('/generate/outreach/bulk', 'POST', { prospect_list_content_id: listId, top_n: topN, campaign_id: campaignId || null });
+    hideTyping('outreach-typing');
+    const results = result.results || [];
+    out.innerHTML = '<div class="rb"><div class="rb-header">BULK OUTREACH — ' + results.length + ' SEQUENCES</div><div class="rb-body">' +
+      results.map(function(r){ return '<div style="margin-bottom:6px;padding:8px;background:var(--surface);border-radius:6px"><span style="color:' + (r.status==='success'?'var(--green)':'var(--rose)') + '">' + (r.status==='success'?'✅':'❌') + '</span> <strong>' + escapeHtml(r.company||'') + '</strong>' + (r.error ? ' — ' + escapeHtml(r.error) : '') + '</div>'; }).join('') +
+      '<div style="margin-top:10px;font-size:12px;color:var(--text2)">Sequences saved to Library → filter: outreach_sequence</div></div></div>';
+    showToast('Generated ' + results.filter(function(r){ return r.status==='success'; }).length + ' sequences!');
+  } catch(e) {
+    hideTyping('outreach-typing');
+    out.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error: ' + escapeHtml(e.message) + '</div></div>';
+    showToast(e.message, true);
+  }
+}
+
+function renderOutreachOutput(result) {
+  const container = document.getElementById('outreach-output');
+  const j = result.json_output || {};
+  let html = '<div class="rb"><div class="rb-header">OUTREACH SEQUENCE</div><div class="rb-body">' + escapeHtml(result.headline||'') + '<br><br>' + escapeHtml(j.sequence_strategy||result.body||'') + '</div></div>';
+
+  var touchMap = [
+    ['touch_1','Cold Email (Day 1)'],
+    ['touch_2','LinkedIn (Day 3)'],
+    ['touch_3','Value Email (Day 7)'],
+    ['touch_4','Case Study (Day 14)'],
+    ['touch_5','Break-up Email (Day 21)']
+  ];
+
+  touchMap.forEach(function(pair) {
+    const key = pair[0]; const label = pair[1];
+    const t = j[key];
+    if (!t) return;
+    html += '<div class="rb"><div class="rb-header">' + label + '</div><div class="rb-body">';
+    if (t.subject_a) html += '<div style="margin-bottom:6px"><span style="color:var(--text3);font-size:11px">Subject A:</span> <strong style="color:var(--green)">' + escapeHtml(t.subject_a) + '</strong></div>';
+    if (t.subject_b) html += '<div style="margin-bottom:10px"><span style="color:var(--text3);font-size:11px">Subject B:</span> <strong style="color:var(--amber)">' + escapeHtml(t.subject_b) + '</strong></div>';
+    if (t.subject)   html += '<div style="margin-bottom:10px"><span style="color:var(--text3);font-size:11px">Subject:</span> <strong style="color:var(--green)">' + escapeHtml(t.subject) + '</strong></div>';
+    if (t.connection_note) html += '<div style="margin-bottom:10px"><span style="color:var(--text3);font-size:11px">LinkedIn note:</span><div style="padding:10px;background:var(--surface);border-radius:6px;font-size:12px;margin-top:4px">' + escapeHtml(t.connection_note) + '</div></div>';
+    const body = t.body || t.fallback_email_body;
+    if (body) html += '<div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12.5px;white-space:pre-wrap;line-height:1.75">' + escapeHtml(body) + '</div>';
+    if (t.ps_line) html += '<div style="margin-top:8px;font-size:12px;color:var(--text3);font-style:italic">P.S. ' + escapeHtml(t.ps_line) + '</div>';
+    if (t.send_time) html += '<div style="margin-top:6px;font-size:11px;color:var(--text3)">⏰ ' + escapeHtml(t.send_time) + '</div>';
+    html += '</div></div>';
+  });
+
+  if (j.objection_handlers) {
+    html += '<div class="rb"><div class="rb-header">OBJECTION HANDLERS</div><div class="rb-body">';
+    Object.entries(j.objection_handlers).forEach(function(kv) {
+      html += '<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--amber);text-transform:uppercase;margin-bottom:4px">' + kv[0].replace(/_/g,' ') + '</div><div style="font-size:12px;padding:10px;background:var(--surface);border-radius:6px">' + escapeHtml(kv[1]) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  if (j.call_opener) html += '<div class="rb"><div class="rb-header">CALL OPENER</div><div class="rb-body" style="font-size:12.5px;white-space:pre-wrap">' + escapeHtml(j.call_opener) + '</div></div>';
+
+  if (j.linkedin_message_sequence && j.linkedin_message_sequence.length) {
+    html += '<div class="rb"><div class="rb-header">LINKEDIN DM SEQUENCE</div><div class="rb-body">';
+    j.linkedin_message_sequence.forEach(function(m,i) {
+      html += '<div style="margin-bottom:8px"><span class="tag tb">DM ' + (i+1) + '</span><div style="margin-top:4px;padding:10px;background:var(--surface);border-radius:6px;font-size:12px">' + escapeHtml(m) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LINKEDIN SCHEDULER
+// ═══════════════════════════════════════════════════════════════════════════
+async function checkLinkedInCreds() {
+  const el = document.getElementById('li-cred-status');
+  el.innerHTML = '<span style="font-size:11px;color:var(--blue)">Checking…</span>';
+  try {
+    const r = await api('/generate/linkedin/check-credentials');
+    if (r.configured) {
+      el.innerHTML = '<span style="font-size:11px;color:var(--green)">✅ Configured — ' + escapeHtml(r.person_id||'') + '</span>';
+    } else {
+      el.innerHTML = '<span style="font-size:11px;color:var(--amber)">⚠️ Not configured. Add LINKEDIN_ACCESS_TOKEN to .env</span>';
+    }
+  } catch(e) {
+    el.innerHTML = '<span style="font-size:11px;color:var(--rose)">❌ ' + escapeHtml(e.message) + '</span>';
+  }
+}
+
+async function postToLinkedInNow() {
+  const contentId = document.getElementById('li-content-id').value.trim();
+  if (!contentId) { showToast('Paste a content ID from the Library', true); return; }
+  showToast('Posting to LinkedIn…');
+  try {
+    const r = await api('/generate/linkedin/post-now/' + contentId, 'POST');
+    showToast('Posted! ' + (r.post_urn || r.urn || 'success'));
+    document.getElementById('li-cred-status').innerHTML = '<span style="font-size:11px;color:var(--green)">✅ Posted!</span>';
+  } catch(e) {
+    showToast(e.message, true);
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  document.getElementById('dm-loops').textContent = loopCount;
+  // Connect SSE live log stream
+  initLiveLog();
+  // Update agent count
+  const agentEl = document.getElementById('dm-agents');
+  if (agentEl) agentEl.textContent = '11';
+});
+</script>
+</body>
+</html>
