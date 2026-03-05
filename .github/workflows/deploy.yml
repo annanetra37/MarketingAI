@@ -1,0 +1,67 @@
+name: Triple I — CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with flake8 (non-blocking)
+        run: |
+          pip install flake8
+          # Stop build if syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=frontend/
+        continue-on-error: true
+
+      - name: Check imports load correctly
+        env:
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          OPENAI_API_KEY: "sk-test-fake-key-for-import-check"
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          # Check all agent imports resolve
+          from app.agents.triple_i_context import get_master_context, SALES_STRATEGY
+          from app.agents.cmo_agent import CMOAgent
+          from app.agents.content_agent import ContentAgent
+          from app.agents.seo_agent import SEOAgent
+          from app.agents.ads_agent import AdsAgent
+          from app.agents.research_agent import ResearchAgent
+          from app.agents.distribution_agent import DistributionAgent
+          from app.agents.analytics_agent import AnalyticsAgent
+          from app.agents.budget_agent import BudgetAgent
+          from app.agents.autonomous_orchestrator import AutonomousOrchestrator
+          print('✅ All agent imports OK')
+          context = get_master_context()
+          assert 'EcoHub' in context, 'Product context missing EcoHub'
+          assert 'Fast-Track' in SALES_STRATEGY, 'Sales strategy missing Fast-Track Sprint'
+          print('✅ Context and strategy checks passed')
+          "
+
+      - name: Notify Railway deploy
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: echo "✅ Tests passed — Railway will auto-deploy from main branch"

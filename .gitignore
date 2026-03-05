@@ -1,1 +1,33 @@
+# Environment — NEVER commit this
 .env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.Python
+venv/
+env/
+.venv/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic (keep migrations, not compiled)
+*.pyc
+
+# Logs
+*.log
