@@ -1,57 +1,86 @@
+"""
+research_agent.py
+=================
+Research Agent — market intelligence, competitor analysis, and regulatory briefings.
+
+Focus: identify CSRD compliance gaps competitors leave open, regulatory deadlines
+creating urgency NOW, and market opportunities Triple I can capture FAST in Europe.
+"""
+
+import json
+from sqlalchemy.orm import Session
 from app.agents.base_agent import BaseAgent
+from app.agents.triple_i_context import (
+    get_master_context, REGULATORY_URGENCY, MARKETS, COMPETITIVE_POSITIONING
+)
 from app.models.generated_content import GeneratedContent
 
 
 class ResearchAgent(BaseAgent):
     """
-    Market intelligence agent for Triple I.
-    Analyzes competitors, regulatory landscape, and content opportunities.
-    Note: Web search integration is architecture-ready — currently uses LLM knowledge.
-    To enable live web search, inject a search_fn callable.
+    🔬 Research Agent
+    Produces competitor intelligence and regulatory briefings that arm
+    the CMO, Content, and Ads agents with market-winning insights.
     """
 
     AGENT_TYPE = "research"
 
-    def __init__(self, db, search_fn=None):
-        super().__init__(db)
-        self.search_fn = search_fn  # Optional: pass a web search function
-
     # ─────────────────────────────────────────────
-    # Competitor Content Analysis
+    # Competitor Analysis
     # ─────────────────────────────────────────────
-    def analyze_competitors(self, campaign_id) -> GeneratedContent:
+    def competitor_analysis(self, campaign_id) -> GeneratedContent:
+        """
+        Analyse the competitive ESG reporting software landscape in the target market.
+        Identifies gaps Triple I can exploit, especially around:
+        - CSRD/ESRS native support (most competitors bolt it on)
+        - Framework interoperability (ESRS ↔ ISSB ↔ GRI)
+        - Pilot/SME accessibility (most tools are enterprise-only)
+        - Fast onboarding vs. long implementation projects
+        """
         campaign, persona, country = self.build_context(campaign_id)
 
         system_prompt = f"""
-You are the Research Agent for Triple I — ESG & Carbon Reporting platform.
+You are the Market Research Agent for Triple I.
 
-Your job: analyze the competitive landscape for Triple I in {country.name},
-focusing on the {persona.name} segment and {campaign.framework_focus} framework positioning.
+{get_master_context()}
 
-Known competitors in ESG/CSRD space:
-- Watershed, Persefoni, Sweep, Greenly (carbon accounting)
-- Workiva, Enablon (ESG reporting platforms)
-- Salesforce Net Zero Cloud
-- Specialised CSRD tools from big4 accounting firms
-- Manual consulting approaches
+Your research mission:
+- Identify how competitors fail to serve the CSRD-urgency market
+- Find the messaging whitespace Triple I can own
+- Surface the objections buyers have about switching from spreadsheets or legacy tools
+- Map the competitive landscape for ESG reporting software in {country.name}
 
-Analyze honestly. Triple I's edge: Framework Interoperability + SME/Advisory focus.
+Key competitive insight to explore:
+- Most ESG platforms have CSRD support as an add-on, not native
+- Most are built for large enterprises, not 250–1500 employee SMEs
+- Most require IT involvement — Triple I doesn't
+- Most lack the Fast-Track Pilot model — they sell long implementation projects
+- Most lack true framework interoperability across ESRS + ISSB + GRI simultaneously
         """.strip()
 
         user_prompt = f"""
 Produce a competitive intelligence report for Triple I in {country.name}.
 
-Focus: {persona.name} segment | Framework: {campaign.framework_focus}
+Persona: {persona.name}
+Framework focus: {campaign.framework_focus}
+Country context: {country.notes}
 
-Return JSON with:
-- market_summary: overview of the ESG software market in {country.name} (3-4 sentences)
-- competitor_analysis: array of 5 competitors, each with:
-  {{name, positioning, strengths (array), weaknesses (array), triple_i_advantage (how Triple I wins vs them)}}
-- market_gaps: array of 4 underserved opportunities Triple I can own
-- messaging_whitespace: topics/angles competitors are NOT covering (Triple I can dominate)
-- threat_assessment: biggest competitive threats and mitigation strategy
-- content_intelligence: what content is performing well in this space (based on your knowledge)
-- recommended_differentiators: 3 key messages Triple I should hammer to stand out
+Analyse the ESG reporting software competitive landscape including:
+- Enterprise platforms (SAP Sustainability, IBM Envizi, Salesforce Net Zero Cloud)
+- Mid-market ESG tools (Persefoni, Watershed, Sphera, Sweep, Plan A, Normative)
+- Manual/spreadsheet approaches (current state for most CSRD-phase-2 companies)
+- Local consultants and Big 4 advisory services
+
+For each competitor type, identify:
+- Their positioning and strengths
+- Their CSRD/ESRS weaknesses
+- The gap Triple I's Fast-Track Sprint and EcoHub™ fills
+- The messaging angle Triple I should use to win against them
+
+Also identify:
+- Top 3 objections buyers have that Triple I's sales team must overcome
+- The #1 fear-based message that makes buyers choose Triple I over waiting
+- Recommended differentiator to lead with for {persona.name} in {country.name}
         """.strip()
 
         schema = {
@@ -63,26 +92,32 @@ Return JSON with:
                     "items": {
                         "type": "object",
                         "properties": {
-                            "name":               {"type": "string"},
-                            "positioning":        {"type": "string"},
-                            "strengths":          {"type": "array", "items": {"type": "string"}},
-                            "weaknesses":         {"type": "array", "items": {"type": "string"}},
-                            "triple_i_advantage": {"type": "string"}
+                            "name":                   {"type": "string"},
+                            "category":               {"type": "string"},
+                            "positioning":            {"type": "string"},
+                            "csrd_weakness":          {"type": "string"},
+                            "triple_i_advantage":     {"type": "string"},
+                            "win_message":            {"type": "string"}
                         },
-                        "required": ["name", "positioning", "strengths", "weaknesses", "triple_i_advantage"],
+                        "required": ["name", "category", "positioning", "csrd_weakness",
+                                     "triple_i_advantage", "win_message"],
                         "additionalProperties": False
                     }
                 },
-                "market_gaps":              {"type": "array", "items": {"type": "string"}},
-                "messaging_whitespace":     {"type": "array", "items": {"type": "string"}},
-                "threat_assessment":        {"type": "string"},
-                "content_intelligence":     {"type": "string"},
-                "recommended_differentiators": {"type": "array", "items": {"type": "string"}}
+                "market_gaps":                 {"type": "array", "items": {"type": "string"}},
+                "messaging_whitespace":         {"type": "array", "items": {"type": "string"}},
+                "top_buyer_objections":         {"type": "array", "items": {"type": "string"}},
+                "objection_handling":           {"type": "array", "items": {"type": "string"}},
+                "primary_fear_message":         {"type": "string"},
+                "recommended_differentiators":  {"type": "array", "items": {"type": "string"}},
+                "pilot_positioning_advice":     {"type": "string"},
+                "content_intelligence":         {"type": "string"}
             },
             "required": [
                 "market_summary", "competitor_analysis", "market_gaps",
-                "messaging_whitespace", "threat_assessment",
-                "content_intelligence", "recommended_differentiators"
+                "messaging_whitespace", "top_buyer_objections", "objection_handling",
+                "primary_fear_message", "recommended_differentiators",
+                "pilot_positioning_advice", "content_intelligence"
             ],
             "additionalProperties": False
         }
@@ -103,57 +138,62 @@ Return JSON with:
     # CSRD Regulatory Briefing
     # ─────────────────────────────────────────────
     def regulatory_briefing(self, campaign_id) -> GeneratedContent:
+        """
+        Produce a regulatory intelligence briefing that arms the marketing
+        team with country-specific CSRD urgency data and deadline details.
+        Used to make all outreach and content hyper-relevant.
+        """
         campaign, persona, country = self.build_context(campaign_id)
 
-        system_prompt = """
+        system_prompt = f"""
 You are the Regulatory Intelligence Agent for Triple I.
-You have deep knowledge of ESG reporting regulations: CSRD, ESRS, GRI, ISSB/IFRS S1&S2, TCFD.
-Your job: produce actionable regulatory briefings that help Triple I's marketing team
-understand the regulatory pressure driving demand in each market.
+You have deep knowledge of: CSRD, ESRS E1–E5/S1–S4/G1, GRI, ISSB/IFRS S1&S2, TCFD, VSME, GHG Protocol, SBTi.
+
+{REGULATORY_URGENCY}
+
+Your job: produce briefings that make Triple I's marketing hyper-relevant and urgent.
+Every briefing must identify the SPECIFIC deadlines and compliance risks that create
+buyer urgency for {persona.name} in {country.name} RIGHT NOW.
         """.strip()
 
         user_prompt = f"""
 Produce a regulatory intelligence briefing for Triple I's marketing team.
 
-Country: {country.name} | Cluster: {country.cluster}
-Persona: {persona.name}
-Framework Focus: {campaign.framework_focus}
+Target: {persona.name} in {country.name} (Cluster: {country.cluster})
+Framework focus: {campaign.framework_focus}
+Country context: {country.notes}
 
-Return JSON with:
-- regulatory_snapshot: current state of ESG/CSRD regulation in {country.name}
-- key_deadlines: array of upcoming reporting deadlines with {{deadline, regulation, who_affected, urgency_level}}
-- compliance_pain_points: top 5 pain points companies face with current regulations
-- framework_requirements: what {campaign.framework_focus} specifically requires in {country.name}
-- marketing_hooks: 5 regulatory-driven urgency messages Triple I can use in campaigns
-- content_calendar_triggers: regulatory events/dates that should trigger content publishing
+BRIEFING MUST COVER:
+1. current_csrd_status: What's the CSRD compliance status in {country.name} right now?
+2. immediate_deadlines: Which companies are reporting WHEN — specific FY and company size thresholds
+3. most_urgent_disclosures: Which ESRS topics (E1, S1, etc.) are most pressing for {persona.name}?
+4. penalty_risk: What are the non-compliance consequences? Be specific and scary.
+5. regulator_profile: Who is the national regulator and what are they focusing on?
+6. market_opportunity: How many companies in {country.name} are in CSRD scope NOW?
+7. fear_triggers: 3 specific fear triggers for {persona.name} that Triple I's messaging should use
+8. urgency_statements: 5 ready-to-use urgency statements for ads/content
+9. pilot_relevance: How does the Fast-Track E1+S1 Sprint map to the most urgent disclosures?
+10. recommended_messaging: The #1 message angle for this country/persona right now
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "regulatory_snapshot": {"type": "string"},
-                "key_deadlines": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "deadline":       {"type": "string"},
-                            "regulation":     {"type": "string"},
-                            "who_affected":   {"type": "string"},
-                            "urgency_level":  {"type": "string"}
-                        },
-                        "required": ["deadline", "regulation", "who_affected", "urgency_level"],
-                        "additionalProperties": False
-                    }
-                },
-                "compliance_pain_points":       {"type": "array", "items": {"type": "string"}},
-                "framework_requirements":       {"type": "string"},
-                "marketing_hooks":              {"type": "array", "items": {"type": "string"}},
-                "content_calendar_triggers":    {"type": "array", "items": {"type": "string"}}
+                "current_csrd_status":     {"type": "string"},
+                "immediate_deadlines":     {"type": "array", "items": {"type": "string"}},
+                "most_urgent_disclosures": {"type": "array", "items": {"type": "string"}},
+                "penalty_risk":            {"type": "string"},
+                "regulator_profile":       {"type": "string"},
+                "market_opportunity":      {"type": "string"},
+                "fear_triggers":           {"type": "array", "items": {"type": "string"}},
+                "urgency_statements":      {"type": "array", "items": {"type": "string"}},
+                "pilot_relevance":         {"type": "string"},
+                "recommended_messaging":   {"type": "string"}
             },
             "required": [
-                "regulatory_snapshot", "key_deadlines", "compliance_pain_points",
-                "framework_requirements", "marketing_hooks", "content_calendar_triggers"
+                "current_csrd_status", "immediate_deadlines", "most_urgent_disclosures",
+                "penalty_risk", "regulator_profile", "market_opportunity",
+                "fear_triggers", "urgency_statements", "pilot_relevance", "recommended_messaging"
             ],
             "additionalProperties": False
         }
@@ -163,9 +203,9 @@ Return JSON with:
 
         return self._save_content(
             campaign_id=campaign_id,
-            content_type="research",
-            headline=f"Regulatory Briefing — {country.name} | {campaign.framework_focus}",
-            body=content["regulatory_snapshot"],
+            content_type="regulatory_briefing",
+            headline=f"Regulatory Briefing — {country.name} | CSRD/ESRS {campaign.framework_focus}",
+            body=content["current_csrd_status"],
             json_output=content,
             usage=result["usage"]
         )

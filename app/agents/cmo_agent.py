@@ -1,46 +1,59 @@
-from app.agents.base_agent import BaseAgent
-from app.agents.content_agent import ContentAgent
-from app.agents.seo_agent import SEOAgent
-from app.agents.ads_agent import AdsAgent
-from app.models.campaign import Campaign
-from app.models.generated_content import GeneratedContent
-from app.models.persona import Persona
-from app.models.country import Country
+"""
+cmo_agent.py
+============
+CMO Orchestrator — Strategic brain of the Triple I autonomous marketing system.
+
+Knows Triple I's full product, both ICPs, all target markets, and the
+Fear → Pilot → 6-Week Close sales strategy.  Coordinates all other agents.
+"""
+
 import json
+from sqlalchemy.orm import Session
+from app.agents.base_agent import BaseAgent
+from app.agents.triple_i_context import (
+    get_master_context, get_fear_hooks, get_cta_library,
+    SALES_STRATEGY, ICP_SME, ICP_ADVISORY, MARKETS, VALUE_PROPS
+)
+from app.models.generated_content import GeneratedContent
 
 
 class CMOAgent(BaseAgent):
     """
-    The orchestrator. Acts as CMO — creates strategic briefs, coordinates all agents,
-    reviews output quality, and drives the full campaign pipeline.
+    🧠 CMO Orchestrator
+    Sets strategy, creates campaign briefs, runs the 5-step pipeline,
+    and answers strategic questions via chat.
     """
 
     AGENT_TYPE = "cmo"
 
     # ─────────────────────────────────────────────
-    # Strategic Brief Generation
+    # Campaign Brief
     # ─────────────────────────────────────────────
-    def create_campaign_brief(self, campaign_id) -> GeneratedContent:
+    def create_campaign_brief(self, campaign_id: str) -> GeneratedContent:
+        """
+        Generate a comprehensive campaign brief embedding the Fear → Pilot →
+        6-Week Close sales motion and full product context.
+        """
         campaign, persona, country = self.build_context(campaign_id)
 
         system_prompt = f"""
-You are the CMO of Triple I — an AI-powered ESG & Carbon Reporting platform.
+You are the CMO for Triple I — an AI-powered ESG & Carbon Reporting B2B SaaS platform.
+You are also the strategic orchestrator for all marketing agents.
 
-Triple I strategic positioning:
-- PRIMARY DIFFERENTIATOR: Framework Interoperability Translator (ESRS ↔ ISSB ↔ GRI ↔ TCFD)
-- PRODUCT FOCUS: Carbon footprint reporting + CSRD compliance + audit-ready outputs
-- ENGINE: EcoHub (core sustainability data engine)
-- TARGET: CSRD-pressured SMEs (250-1500 employees) + ESG Advisory Firms
-- MARKETS: Cluster A (Spain, France, Netherlands, Belgium, Sweden — CSRD urgency) | Cluster B (UAE, Japan — ISSB alignment)
+{get_master_context()}
 
-Content allocation: 60% SME-focused, 40% Advisory-focused.
+YOUR STRATEGIC MANDATE:
+- Every campaign brief MUST embed the Fear → Value → Pilot sales motion
+- CSRD urgency is your #1 lever — use it relentlessly
+- All briefs must accelerate a sub-6-week sales cycle
+- Cluster A (Spain, France, Netherlands, Belgium, Sweden) is the IMMEDIATE priority
+- Content must drive to one of three actions:
+  1. Book a free ESRS Readiness Assessment
+  2. Start a Fast-Track Compliance Sprint (€5K–€15K pilot)
+  3. Book a live demo
+
 Geographic rule: NEVER run generic global campaigns. Always tailor per cluster.
-
-You think strategically. You understand:
-- What makes B2B SaaS marketing effective
-- The difference between demand gen and demand capture
-- How to sequence content for maximum funnel impact
-- The ESG regulatory landscape deeply
+Think in funnels: fear → credibility → demo request → pilot → close.
         """.strip()
 
         user_prompt = f"""
@@ -56,40 +69,51 @@ Persona Pains: {json.dumps(persona.pains)}
 Persona Motivations: {json.dumps(persona.motivations)}
 Country Notes: {country.notes}
 
-The brief must include:
-- executive_summary: 2-3 sentence strategic overview
-- market_context: regulatory/market situation in this country right now
-- target_audience_insight: deep insight about this specific persona's mindset
-- core_message: THE single message that runs through all campaign content
-- content_pillars: array of 3 strategic content themes with rationale
-- channel_strategy: specific recommendations for {campaign.channel}
-- campaign_phases: array of 3 phases (phase name, timeline, tactics, success metrics)
-- kpis: array of 5 specific, measurable KPIs with targets
-- competitive_angle: how to position Triple I vs. manual/spreadsheet approach
-- agent_tasks: array of recommended tasks for Content, SEO, and Ads agents
+The brief must:
+1. Lead with the regulatory fear/urgency angle for {country.name}
+2. Position the Fast-Track Compliance Sprint (E1+S1, 6–8 weeks, €5K–€15K) as the primary CTA
+3. Include the ESRS Readiness Assessment as the lead-gen hook
+4. Define the exact 5-step sales motion for this persona/country combo
+5. Specify content that creates fear FIRST, then demonstrates Triple I value
+
+Return JSON with all required fields.
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "executive_summary":      {"type": "string"},
-                "market_context":         {"type": "string"},
-                "target_audience_insight":{"type": "string"},
-                "core_message":           {"type": "string"},
+                "executive_summary":        {"type": "string"},
+                "market_context":           {"type": "string"},
+                "regulatory_urgency":       {"type": "string"},
+                "target_audience_insight":  {"type": "string"},
+                "core_message":             {"type": "string"},
+                "fear_hook":                {"type": "string"},
+                "pilot_cta":                {"type": "string"},
+                "lead_gen_hook":            {"type": "string"},
                 "content_pillars": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "pillar":   {"type": "string"},
-                            "rationale":{"type": "string"},
-                            "examples": {"type": "array", "items": {"type": "string"}}
+                            "pillar":    {"type": "string"},
+                            "rationale": {"type": "string"},
+                            "formats":   {"type": "array", "items": {"type": "string"}}
                         },
-                        "required": ["pillar", "rationale", "examples"],
+                        "required": ["pillar", "rationale", "formats"],
                         "additionalProperties": False
                     }
                 },
-                "channel_strategy":     {"type": "string"},
+                "channel_strategy": {"type": "string"},
+                "sales_cycle_plan": {
+                    "type": "object",
+                    "properties": {
+                        "week_1_2": {"type": "string"},
+                        "week_3_4": {"type": "string"},
+                        "week_5_6": {"type": "string"}
+                    },
+                    "required": ["week_1_2", "week_3_4", "week_5_6"],
+                    "additionalProperties": False
+                },
                 "campaign_phases": {
                     "type": "array",
                     "items": {
@@ -98,7 +122,7 @@ The brief must include:
                             "phase":           {"type": "string"},
                             "timeline":        {"type": "string"},
                             "tactics":         {"type": "array", "items": {"type": "string"}},
-                            "success_metrics": {"type": "string"}
+                            "success_metrics": {"type": "array", "items": {"type": "string"}}
                         },
                         "required": ["phase", "timeline", "tactics", "success_metrics"],
                         "additionalProperties": False
@@ -109,11 +133,11 @@ The brief must include:
                     "items": {
                         "type": "object",
                         "properties": {
-                            "metric": {"type": "string"},
+                            "kpi":    {"type": "string"},
                             "target": {"type": "string"},
                             "why":    {"type": "string"}
                         },
-                        "required": ["metric", "target", "why"],
+                        "required": ["kpi", "target", "why"],
                         "additionalProperties": False
                     }
                 },
@@ -123,10 +147,10 @@ The brief must include:
                     "items": {
                         "type": "object",
                         "properties": {
-                            "agent":       {"type": "string"},
-                            "task":        {"type": "string"},
-                            "priority":    {"type": "string"},
-                            "rationale":   {"type": "string"}
+                            "agent":     {"type": "string"},
+                            "task":      {"type": "string"},
+                            "priority":  {"type": "string"},
+                            "rationale": {"type": "string"}
                         },
                         "required": ["agent", "task", "priority", "rationale"],
                         "additionalProperties": False
@@ -134,9 +158,11 @@ The brief must include:
                 }
             },
             "required": [
-                "executive_summary", "market_context", "target_audience_insight",
-                "core_message", "content_pillars", "channel_strategy",
-                "campaign_phases", "kpis", "competitive_angle", "agent_tasks"
+                "executive_summary", "market_context", "regulatory_urgency",
+                "target_audience_insight", "core_message", "fear_hook", "pilot_cta",
+                "lead_gen_hook", "content_pillars", "channel_strategy",
+                "sales_cycle_plan", "campaign_phases", "kpis",
+                "competitive_angle", "agent_tasks"
             ],
             "additionalProperties": False
         }
@@ -144,7 +170,6 @@ The brief must include:
         result  = self._call_model(system_prompt, user_prompt, "campaign_brief", schema)
         content = result["content"]
 
-        # Save brief to campaign record too
         campaign.cmo_brief = content["executive_summary"]
         self.db.commit()
 
@@ -162,91 +187,81 @@ The brief must include:
     # ─────────────────────────────────────────────
     def run_full_pipeline(self, campaign_id: str) -> dict:
         """
-        Runs the full agent pipeline:
-        1. CMO Brief
-        2. SEO Keyword Cluster
-        3. LinkedIn Post
-        4. Blog from LinkedIn
-        5. Google Ads
-        Returns a summary dict with all generated content IDs.
+        Runs the full 5-step pipeline:
+        1. CMO Brief  2. SEO Keywords  3. LinkedIn  4. Blog  5. Google Ads
         """
+        from app.agents.seo_agent import SEOAgent
+        from app.agents.content_agent import ContentAgent
+        from app.agents.ads_agent import AdsAgent
+
         results = {}
         errors  = {}
 
-        # 1. CMO Brief
-        try:
-            brief = self.create_campaign_brief(campaign_id)
-            results["cmo_brief"] = str(brief.id)
-        except Exception as e:
-            errors["cmo_brief"] = str(e)
-
-        # 2. SEO Research
-        try:
-            seo_agent = SEOAgent(self.db)
-            seo = seo_agent.generate_keyword_cluster(campaign_id)
-            results["seo_report"] = str(seo.id)
-        except Exception as e:
-            errors["seo_report"] = str(e)
-
-        # 3. LinkedIn Post
-        try:
-            content_agent = ContentAgent(self.db)
-            linkedin = content_agent.generate_linkedin(campaign_id)
-            results["linkedin"] = str(linkedin.id)
-
-            # 4. Blog from LinkedIn
+        for step, fn in [
+            ("cmo_brief",    lambda: self.create_campaign_brief(campaign_id)),
+            ("seo_report",   lambda: SEOAgent(self.db).generate_keyword_cluster(campaign_id)),
+            ("linkedin",     lambda: ContentAgent(self.db).generate_linkedin(campaign_id)),
+        ]:
             try:
-                blog = content_agent.generate_blog_from_linkedin(linkedin.id)
+                obj = fn()
+                results[step] = str(obj.id)
+            except Exception as e:
+                errors[step] = str(e)
+
+        # Blog from LinkedIn (depends on linkedin step)
+        if "linkedin" in results:
+            try:
+                blog = ContentAgent(self.db).generate_blog_from_linkedin(results["linkedin"])
                 results["blog"] = str(blog.id)
             except Exception as e:
                 errors["blog"] = str(e)
 
-        except Exception as e:
-            errors["linkedin"] = str(e)
-
-        # 5. Google Ads
         try:
-            ads_agent = AdsAgent(self.db)
-            ads = ads_agent.generate_google_ads(campaign_id)
+            ads = AdsAgent(self.db).generate_google_ads(campaign_id)
             results["google_ads"] = str(ads.id)
         except Exception as e:
             errors["google_ads"] = str(e)
 
         return {
-            "campaign_id": campaign_id,
-            "generated": results,
-            "errors":    errors,
+            "campaign_id":  campaign_id,
+            "generated":    results,
+            "errors":       errors,
             "total_pieces": len(results)
         }
 
     # ─────────────────────────────────────────────
-    # Chat interface — respond to strategic questions
+    # Strategic Chat Interface
     # ─────────────────────────────────────────────
     def chat(self, message: str, context: dict = None) -> str:
-        system_prompt = """
-You are the CMO Agent for Triple I — an AI-powered ESG & Carbon Reporting B2B SaaS platform.
+        """
+        Strategic Q&A — answers any marketing or sales question
+        with full product + strategy knowledge.
+        """
+        system_prompt = f"""
+You are the CMO for Triple I — an AI-powered ESG & Carbon Reporting B2B SaaS platform.
+You have complete strategic knowledge of the product, market, and sales motion.
 
-Triple I positioning:
-- The Framework Interoperability Translator: ESRS ↔ ISSB ↔ GRI ↔ TCFD
-- Carbon reporting automation for CSRD-pressured SMEs (250-1500 employees)
-- Target markets: Spain, France, Netherlands, Belgium, Sweden (Cluster A - CSRD urgency) + UAE, Japan (Cluster B - ISSB alignment)
-- Two ICPs: SMEs (compliance-driven) and ESG Advisory Firms (scale-driven)
-- Content split: 60% SME, 40% Advisory
+{get_master_context()}
 
-You have full strategic marketing knowledge. You:
-- Brief the Content Agent on what to write
-- Direct the SEO Agent on which keywords to own
-- Guide the Ads Agent on creative angles to test
-- Monitor campaign performance and recommend pivots
-- Think in funnels: awareness → consideration → conversion
+Your communication style:
+- Always think about Fear → Value → Pilot → Close
+- Be direct and actionable — no vague advice
+- Give concrete recommendations with specific copy examples
+- Reference real ESRS/CSRD deadlines to justify urgency
+- Always end recommendations with a specific next action
 
-Be concise, strategic, and actionable. Use bullet points for recommendations.
-If the user asks you to create something, describe exactly what you would brief each agent to do.
+You can:
+- Create campaign briefs with the Fast-Track Compliance Sprint as the centrepiece
+- Recommend channel strategy per country cluster
+- Draft copy hooks, CTAs, and outreach messages
+- Define ICP qualification criteria for discovery calls
+- Sequence content for maximum funnel velocity
+- Explain how to position Triple I vs. spreadsheets or legacy ESG tools
         """.strip()
 
         context_note = ""
         if context:
-            context_note = f"\n\nCurrent context: {json.dumps(context)}"
+            context_note = f"\n\nCurrent campaign context: {json.dumps(context)}"
 
         result = self._call_model_free(system_prompt, message + context_note)
         return result["content"]

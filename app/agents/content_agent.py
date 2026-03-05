@@ -1,94 +1,110 @@
+"""
+content_agent.py
+================
+Content Agent — generates LinkedIn posts, blog articles, and Twitter/X threads
+for Triple I.  Every piece leads with fear/urgency (CSRD deadlines), follows
+with Triple I value, and closes with the Fast-Track Compliance Sprint CTA.
+"""
+
+import json
+from sqlalchemy.orm import Session
 from app.agents.base_agent import BaseAgent
+from app.agents.triple_i_context import (
+    get_master_context, get_fear_hooks, get_cta_library,
+    VALUE_PROPS, ICP_SME, ICP_ADVISORY
+)
 from app.models.generated_content import GeneratedContent
 
 
 class ContentAgent(BaseAgent):
     """
-    Generates persona-aware, country-tailored marketing content.
-    Supports: LinkedIn posts, blog articles, Twitter/X threads.
+    ✍️ Content Agent
+    Generates persona-aware, fear-first, CSRD-urgent content across
+    LinkedIn, Blog, and Twitter/X channels.
     """
 
     AGENT_TYPE = "content"
 
     # ─────────────────────────────────────────────
-    # Internal helpers
+    # Shared system prompt
     # ─────────────────────────────────────────────
-    def _audience_angle(self, persona_name: str) -> str:
-        angles = {
-            "SME":      "Focus on compliance risk, simplicity, cost savings, and automation. "
-                        "Speak to a CFO or Sustainability Manager who is overwhelmed and risk-averse.",
-            "ADVISORY": "Focus on scalability, margin improvement, workflow efficiency, and client growth. "
-                        "Speak to an ESG consultant who wants to differentiate their firm.",
-        }
-        return angles.get(persona_name, "Professional ESG tone. Emphasize value and reliability.")
-
-    def _cluster_context(self, cluster: str) -> str:
-        contexts = {
-            "CLUSTER_A": "This is a CSRD-driven EU market. Emphasize regulatory urgency, ESRS compliance deadlines, "
-                         "audit readiness, and the risk of non-compliance. Localize with EU regulatory language.",
-            "CLUSTER_B": "This is an international ESG maturity market. Emphasize ISSB/IFRS convergence, "
-                         "multinational reporting consistency, and global ESG alignment — not just EU regulation.",
-        }
-        return contexts.get(cluster, "Global ESG context.")
-
     def _build_system_prompt(self, campaign, persona, country) -> str:
+        is_sme = "SME" in persona.name.upper() or "sme" in persona.name.lower()
+        icp_block = ICP_SME if is_sme else ICP_ADVISORY
+
         return f"""
-You are the Content Agent for Triple I — an AI-powered ESG & Carbon reporting platform.
+You are the Content Agent for Triple I — an AI-powered ESG & Carbon Reporting B2B SaaS.
 
-Triple I's positioning:
-- The Framework Interoperability Translator: automatically maps ESRS ↔ ISSB ↔ GRI ↔ TCFD
-- Carbon reporting automation for CSRD-pressured companies
-- Audit-ready outputs powered by EcoHub (core sustainability engine)
-- No manual ESG mapping. Ever.
+{get_master_context()}
 
-Campaign context:
-- Audience: {persona.name}
-- Country: {country.name}
-- Cluster context: {self._cluster_context(country.cluster)}
-- Framework focus: {campaign.framework_focus}
-- Campaign goal: {campaign.goal}
-- Audience angle: {self._audience_angle(persona.name)}
-- Tone: {persona.tone_guidelines}
-- CTA: {persona.cta}
+ACTIVE CAMPAIGN CONTEXT:
+  Persona: {persona.name}
+  Country:  {country.name} (Cluster: {country.cluster})
+  Framework: {campaign.framework_focus}
+  Channel:   {campaign.channel}
+  Goal:      {campaign.goal}
+  Persona pains: {json.dumps(persona.pains)}
+  Persona motivations: {json.dumps(persona.motivations)}
+  Country context: {country.notes}
 
-Content rules:
-1. Be CONCRETE. Use real pain points, real frameworks (ESRS, GRI, ISSB, TCFD, Scope 1/2/3).
-2. Do NOT be generic. Reference the specific country/cluster context.
-3. Always end with the exact CTA provided.
-4. Use numbers and percentages where they strengthen the argument.
-5. Match tone exactly: SME = clear, simple, risk-reducing. Advisory = strategic, efficiency-driven.
+{icp_block}
+
+CONTENT CREATION RULES (non-negotiable):
+1. ALWAYS lead with fear/urgency — CSRD deadline, compliance risk, audit pressure.
+2. Follow with Triple I value — specific product capability that solves the fear.
+3. Close with the Fast-Track Compliance Sprint CTA or ESRS Readiness Assessment CTA.
+4. Use REAL framework names: ESRS E1, ESRS S1, CSRD, VSME, GHG Protocol, Scope 1/2/3.
+5. Reference the 80–90% cost reduction claim where relevant.
+6. Mention EcoHub™ by name — it's the award-winning AI engine.
+7. Be CONCRETE — no generic ESG talk. Reference {country.name}-specific regulatory context.
+8. Tone: {'direct, simple, risk-reducing — the SME is scared and needs clarity' if is_sme else 'strategic, ROI-driven — the advisory firm wants scale and efficiency'}.
+9. Never mention competitors by name.
+10. Every piece must funnel toward one action: demo, assessment, or pilot.
+
+{get_fear_hooks()}
+
+{get_cta_library()}
         """.strip()
 
     # ─────────────────────────────────────────────
     # LinkedIn Post
     # ─────────────────────────────────────────────
     def generate_linkedin(self, campaign_id) -> GeneratedContent:
+        """
+        Generate a high-performing LinkedIn post.
+        Opens with a fear hook, builds with CSRD urgency + Triple I value,
+        closes with Fast-Track Sprint or ESRS Assessment CTA.
+        """
         campaign, persona, country = self.build_context(campaign_id)
-
         system_prompt = self._build_system_prompt(campaign, persona, country)
-        user_prompt = """
-Generate a high-performing LinkedIn post for Triple I.
 
-The post must:
-- Open with a hook that stops the scroll (question, stat, or bold claim)
-- Have a body with short paragraphs or line breaks (LinkedIn formatting)
-- Mention specific ESG frameworks (ESRS, GRI, ISSB, TCFD, or Scope 1/2/3 as relevant)
-- Close with a strong CTA
-- Include 5 relevant hashtags
+        user_prompt = f"""
+Generate a high-performing LinkedIn post for Triple I targeting {persona.name} in {country.name}.
 
-Return JSON with: headline, hook, body, cta, hashtags (array of strings).
+STRUCTURE REQUIRED:
+1. HOOK (1–2 lines): fear-based — CSRD deadline, compliance risk, or audit pressure
+2. BODY (3–5 short paragraphs): regulatory context → problem → Triple I solution
+3. PROOF (1 line): cite the 80–90% cost reduction, EcoHub™ award, or Cambridge ecosystem
+4. CTA (1 line): Book ESRS Readiness Assessment or Start Fast-Track Sprint
+5. HASHTAGS: 5 relevant ones including #CSRD #ESRS and country-specific tags
+
+Formatting: short paragraphs with line breaks (LinkedIn style). No bullet-heavy walls of text.
+The post should feel written by a knowledgeable ESG insider, not a salesperson.
+
+Return JSON with: headline, hook, body, proof_point, cta, hashtags (array).
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "headline":  {"type": "string"},
-                "hook":      {"type": "string"},
-                "body":      {"type": "string"},
-                "cta":       {"type": "string"},
-                "hashtags":  {"type": "array", "items": {"type": "string"}}
+                "headline":    {"type": "string"},
+                "hook":        {"type": "string"},
+                "body":        {"type": "string"},
+                "proof_point": {"type": "string"},
+                "cta":         {"type": "string"},
+                "hashtags":    {"type": "array", "items": {"type": "string"}}
             },
-            "required": ["headline", "hook", "body", "cta", "hashtags"],
+            "required": ["headline", "hook", "body", "proof_point", "cta", "hashtags"],
             "additionalProperties": False
         }
 
@@ -99,15 +115,19 @@ Return JSON with: headline, hook, body, cta, hashtags (array of strings).
             campaign_id=campaign_id,
             content_type="linkedin",
             headline=content["headline"],
-            body=content["body"],
+            body=f"{content['hook']}\n\n{content['body']}\n\n{content['proof_point']}\n\n{content['cta']}",
             json_output=content,
             usage=result["usage"]
         )
 
     # ─────────────────────────────────────────────
-    # Blog from LinkedIn
+    # Blog Article (expanded from LinkedIn)
     # ─────────────────────────────────────────────
     def generate_blog_from_linkedin(self, linkedin_content_id) -> GeneratedContent:
+        """
+        Expand a LinkedIn post into a full SEO-optimised blog article.
+        Structure: fear-hook intro → problem depth → Triple I solution → pilot CTA.
+        """
         linkedin = (
             self.db.query(GeneratedContent)
             .filter(GeneratedContent.id == linkedin_content_id)
@@ -116,117 +136,142 @@ Return JSON with: headline, hook, body, cta, hashtags (array of strings).
         if not linkedin:
             raise ValueError("LinkedIn content not found")
 
-        data = linkedin.json_output
+        data = linkedin.json_output or {}
+        campaign, persona, country = self.build_context(str(linkedin.campaign_id))
 
-        system_prompt = """
-You are the Blog Expansion Agent for Triple I.
+        system_prompt = f"""
+You are the Blog Content Agent for Triple I.
 
-Triple I positioning:
-- Carbon Reporting + ESG Framework Interoperability Engine
-- Translates ESRS ↔ ISSB ↔ GRI ↔ TCFD automatically
-- Built for CSRD-pressured SMEs and ESG Advisory firms
-- Powered by EcoHub
+{get_master_context()}
 
-Write authoritative, educational, SEO-optimized blog content.
-Use clear H2 sections. Include real ESG framework references.
+Blog writing principles:
+- Open with the fear/urgency angle — CSRD deadlines are LIVE
+- Build credibility with specific framework knowledge (ESRS E1, S1, GHG Protocol)
+- Position Triple I's Fast-Track Compliance Sprint as the natural solution
+- Include the ESRS Readiness Assessment as a lead magnet reference
+- SEO-optimised: use H2s, target long-tail CSRD/ESRS keywords
+- Tone matches {persona.name}: {'clear and practical for compliance-focused SME readers' if 'SME' in persona.name.upper() else 'strategic and ROI-focused for advisory professionals'}
+- End with a clear, urgent CTA
+
+{get_fear_hooks()}
+{get_cta_library()}
         """.strip()
 
         user_prompt = f"""
-Expand this LinkedIn post into an 800–1200 word SEO blog article.
+Expand this LinkedIn post into a 700–900 word SEO-optimised blog article for Triple I.
 
-LinkedIn Headline: {data.get("headline", "")}
-LinkedIn Hook: {data.get("hook", "")}
-LinkedIn Body: {data.get("body", "")}
-CTA: {data.get("cta", "")}
+Source LinkedIn post:
+Headline: {data.get('headline', '')}
+Hook: {data.get('hook', '')}
+Body: {data.get('body', '')}
+CTA: {data.get('cta', '')}
 
-Blog structure requirements:
-- title: SEO-optimized H1 (include primary keyword)
-- meta_description: 150-160 chars, compelling, includes keyword
-- sections: array of {{heading (H2), content (2-3 paragraphs each)}}
-  - Section 1: The problem / pain (regulatory context, real numbers)
-  - Section 2: Why current approaches fail (spreadsheets, manual mapping)
-  - Section 3: The Triple I solution (interoperability, EcoHub engine)
-  - Section 4: Practical steps / what to do now
-- cta: strong closing call to action paragraph
+Target audience: {persona.name} in {country.name}
+Framework focus: {campaign.framework_focus}
 
-Return valid JSON.
+BLOG STRUCTURE:
+1. Title (SEO-friendly, includes CSRD/ESRS + country if relevant)
+2. Meta description (155 chars, includes primary keyword)
+3. Intro paragraph: opens with the fear hook, expands the stakes
+4. H2 Section 1: The regulatory pressure in {country.name} right now
+5. H2 Section 2: Why spreadsheets/manual approaches fail ESRS audits
+6. H2 Section 3: How Triple I's Fast-Track Compliance Sprint works (E1+S1, 6–8 weeks)
+7. H2 Section 4: What you get — audit-ready ESRS report, real output, real deadline met
+8. CTA paragraph: Book ESRS Readiness Assessment OR Start Fast-Track Sprint
+
+Include: EcoHub™ mention, 80–90% cost reduction stat, Cambridge ecosystem credibility.
+Return JSON with: title, meta_description, intro, sections (array of h2+content), cta_paragraph, reading_time_minutes.
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "title":            {"type": "string"},
-                "meta_description": {"type": "string"},
+                "title":             {"type": "string"},
+                "meta_description":  {"type": "string"},
+                "intro":             {"type": "string"},
                 "sections": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "heading": {"type": "string"},
+                            "h2":      {"type": "string"},
                             "content": {"type": "string"}
                         },
-                        "required": ["heading", "content"],
+                        "required": ["h2", "content"],
                         "additionalProperties": False
                     }
                 },
-                "cta": {"type": "string"}
+                "cta_paragraph":        {"type": "string"},
+                "reading_time_minutes": {"type": "integer"}
             },
-            "required": ["title", "meta_description", "sections", "cta"],
+            "required": ["title", "meta_description", "intro", "sections", "cta_paragraph", "reading_time_minutes"],
             "additionalProperties": False
         }
 
-        result  = self._call_model(system_prompt, user_prompt, "blog_post", schema)
+        result  = self._call_model(system_prompt, user_prompt, "blog_article", schema)
         content = result["content"]
-        first_section_body = content["sections"][0]["content"] if content["sections"] else ""
 
         return self._save_content(
-            campaign_id=linkedin.campaign_id,
+            campaign_id=str(linkedin.campaign_id),
             content_type="blog",
             headline=content["title"],
-            body=first_section_body,
+            body=content["intro"],
             json_output=content,
-            usage=result["usage"],
-            parent_content_id=linkedin.id
+            usage=result["usage"]
         )
 
     # ─────────────────────────────────────────────
-    # Twitter/X Thread
+    # Twitter / X Thread
     # ─────────────────────────────────────────────
-    def generate_twitter_thread(self, campaign_id) -> GeneratedContent:
+    def generate_twitter(self, campaign_id) -> GeneratedContent:
+        """
+        Generate a Twitter/X thread.
+        Opener creates fear, thread educates on CSRD/ESRS,
+        final tweet promotes ESRS Readiness Assessment or Fast-Track Sprint.
+        """
         campaign, persona, country = self.build_context(campaign_id)
-
         system_prompt = self._build_system_prompt(campaign, persona, country)
-        user_prompt = """
-Write a Twitter/X thread for Triple I. 6-8 tweets.
+
+        user_prompt = f"""
+Generate a Twitter/X thread for Triple I targeting {persona.name} in {country.name}.
+
+THREAD STRUCTURE:
+Tweet 1 (Hook): Bold fear statement — CSRD deadline, compliance risk, or cost of failure
+Tweet 2: Explain the regulatory situation in {country.name} — specific and credible
+Tweet 3: The problem with current approaches (spreadsheets / manual / legacy tools)
+Tweet 4: Introduce Triple I's solution — E1+S1, EcoHub™, 6-week sprint
+Tweet 5: Credibility — Cambridge ecosystem, Innovation Award, 80–90% cost reduction
+Tweet 6 (CTA): Book ESRS Readiness Assessment or Fast-Track Sprint — link to triplei.io
 
 Rules:
-- Tweet 1: hook tweet (bold claim or shocking stat — max 280 chars)
-- Tweets 2-6: each makes one clear, standalone point
-- Tweet 7: practical "what to do" advice
-- Tweet 8: CTA tweet with link placeholder
+- Each tweet max 280 characters
+- Tweet 1 must make people stop scrolling
+- Thread should work as a complete sales argument
+- Include numbers, deadlines, and framework names
+- Hashtags only on tweet 1 and tweet 6
 
-Return JSON with: topic, tweets (array of strings, each max 280 chars).
+Return JSON with: thread_hook, tweets (array of strings), hashtags (array).
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "topic":  {"type": "string"},
-                "tweets": {"type": "array", "items": {"type": "string"}}
+                "thread_hook": {"type": "string"},
+                "tweets":      {"type": "array", "items": {"type": "string"}},
+                "hashtags":    {"type": "array", "items": {"type": "string"}}
             },
-            "required": ["topic", "tweets"],
+            "required": ["thread_hook", "tweets", "hashtags"],
             "additionalProperties": False
         }
 
         result  = self._call_model(system_prompt, user_prompt, "twitter_thread", schema)
         content = result["content"]
-        body    = "\n\n".join([f"{i+1}/ {t}" for i, t in enumerate(content["tweets"])])
 
         return self._save_content(
             campaign_id=campaign_id,
             content_type="twitter",
-            headline=content["topic"],
-            body=body,
+            headline=content["thread_hook"],
+            body="\n\n".join(content["tweets"]),
             json_output=content,
             usage=result["usage"]
         )

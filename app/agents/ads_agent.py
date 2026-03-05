@@ -1,249 +1,253 @@
+"""
+ads_agent.py
+============
+Ads Agent — generates Google Search and LinkedIn Sponsored ads for Triple I.
+
+Ad creative philosophy:
+- Google: capture high-intent CSRD/ESRS searches — Fear hook → Solution → Pilot CTA
+- LinkedIn: interrupt compliance/sustainability decision-makers — Urgency → Demo → Sprint
+- Always 3 A/B variants per ad type with different angles
+- Primary CTA: ESRS Readiness Assessment (top of funnel) OR Fast-Track Sprint (bottom)
+"""
+
+import json
+from sqlalchemy.orm import Session
 from app.agents.base_agent import BaseAgent
+from app.agents.triple_i_context import (
+    get_master_context, get_fear_hooks, get_cta_library,
+    VALUE_PROPS, REGULATORY_URGENCY
+)
 from app.models.generated_content import GeneratedContent
 
 
 class AdsAgent(BaseAgent):
     """
-    Generates paid advertising copy for Triple I.
-    Supports: Google Ads (Search), LinkedIn Ads (Sponsored Content).
-    Produces A/B variants with performance rationale.
+    🎯 Ads Agent
+    Generates high-converting Google Search Ads and LinkedIn Sponsored Content
+    with 3 A/B variants each, aligned to the Fast-Track Compliance Sprint sales motion.
     """
 
     AGENT_TYPE = "ads"
 
-    def _audience_brief(self, persona_name: str, country_name: str, cluster: str) -> str:
-        eu_note = "CSRD compliance deadline urgency is high. Use regulatory pressure as a hook." if cluster == "CLUSTER_A" else \
-                  "ISSB/IFRS alignment is the key driver. Focus on global reporting consistency."
-        persona_note = "Target: CFOs, Sustainability Managers, Compliance Officers at mid-market companies." if persona_name == "SME" else \
-                       "Target: ESG consultants, sustainability directors at advisory and accounting firms."
-        return f"Market: {country_name}. {eu_note}\n{persona_note}"
+    def _ads_system_prompt(self, campaign, persona, country) -> str:
+        return f"""
+You are the Performance Marketing Ads Agent for Triple I.
+
+{get_master_context()}
+
+ACTIVE CAMPAIGN:
+  Persona: {persona.name}
+  Country:  {country.name} (Cluster: {country.cluster})
+  Framework: {campaign.framework_focus}
+  Channel:   {campaign.channel}
+  Country context: {country.notes}
+
+AD CREATION RULES:
+1. Every ad must LEAD WITH FEAR — CSRD deadline, compliance risk, or cost of failure.
+2. Always include at least one specific claim: "80–90% cost reduction", "EcoHub™", "6-week sprint"
+3. Primary CTA: "Book Free ESRS Assessment" (ToFu) OR "Start Compliance Sprint" (BoFu)
+4. Secondary CTA: "Request Demo" for mid-funnel
+5. A/B variants must test different angles: fear vs. speed vs. cost savings
+6. NEVER be generic — always reference {country.name} regulatory context
+
+{REGULATORY_URGENCY}
+
+{get_fear_hooks()}
+
+{get_cta_library()}
+        """.strip()
 
     # ─────────────────────────────────────────────
     # Google Search Ads
     # ─────────────────────────────────────────────
     def generate_google_ads(self, campaign_id) -> GeneratedContent:
+        """
+        Generate 3 Google Search Ad variants.
+        Variant A: Fear angle (CSRD deadline / non-compliance risk)
+        Variant B: Speed angle (6-week sprint / fast compliance)
+        Variant C: Cost angle (80–90% cheaper / replace spreadsheets)
+        """
         campaign, persona, country = self.build_context(campaign_id)
 
-        system_prompt = f"""
-You are the Paid Search Ads Agent for Triple I — ESG & Carbon Reporting platform.
+        system_prompt = self._ads_system_prompt(campaign, persona, country)
 
-Triple I USP: The ONLY tool that automatically translates between ESRS, ISSB, GRI, and TCFD.
+        user_prompt = f"""
+Generate 3 Google Search Ad variants for Triple I in {country.name} targeting {persona.name}.
 
-{self._audience_brief(persona.name, country.name, country.cluster)}
+Google Responsive Search Ad specs:
+- Headlines: 3 per variant, max 30 chars each
+- Descriptions: 2 per variant, max 90 chars each
+- Display URL path: 2 segments, max 15 chars each
 
-Framework focus: {campaign.framework_focus}
-Campaign goal: {campaign.goal}
+VARIANT A — Fear Angle:
+  Hook: CSRD deadline urgency, penalty risk, audit failure
+  CTA: Book Free ESRS Readiness Assessment
 
-Google Ads rules:
-- Headline: max 30 characters each
-- Description: max 90 characters each
-- Include primary keyword in at least 2 headlines
-- Create urgency, highlight differentiation, be specific
-- A/B variants should test DIFFERENT angles, not just word changes
-        """.strip()
+VARIANT B — Speed Angle:
+  Hook: 6-week Fast-Track Compliance Sprint, fast results
+  CTA: Start Your Compliance Sprint Today
 
-        user_prompt = """
-Generate a complete Google Search Ads set for Triple I.
+VARIANT C — Cost/Value Angle:
+  Hook: 80–90% cost reduction vs. manual, replace spreadsheets
+  CTA: See the ROI — Request Demo
 
-Return JSON with:
-- target_keywords: array of 5 search keywords this ad should target
-- ad_group_name: descriptive name for this ad group
-- variant_a: {{
-    name: "Compliance Urgency",
-    headlines: [array of 5 headlines, max 30 chars each],
-    descriptions: [array of 2 descriptions, max 90 chars each],
-    angle: what psychological angle this tests
-  }}
-- variant_b: {{
-    name: "Efficiency/Scale",
-    headlines: [array of 5 headlines, max 30 chars each],
-    descriptions: [array of 2 descriptions, max 90 chars each],
-    angle: what psychological angle this tests
-  }}
-- variant_c: {{
-    name: "Interoperability USP",
-    headlines: [array of 5 headlines, max 30 chars each],
-    descriptions: [array of 2 descriptions, max 90 chars each],
-    angle: what psychological angle this tests
-  }}
-- recommended_landing_page_focus: what the landing page should emphasize for best conversion
-- negative_keywords: array of 5 keywords to exclude
+Keywords to integrate naturally (don't stuff):
+- CSRD compliance, ESRS reporting, ESG software, {country.name} ESG, EcoHub
+
+For each variant also provide:
+- target_keywords: 5 best-match keywords for this variant
+- bid_strategy: recommended Google Ads bid strategy
+- audience_targeting: job titles / company sizes to target
+- quality_score_estimate: 1–10
+
+Return JSON with: variants (array of 3), campaign_notes, estimated_ctr.
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "target_keywords":  {"type": "array", "items": {"type": "string"}},
-                "ad_group_name":    {"type": "string"},
-                "variant_a": {
-                    "type": "object",
-                    "properties": {
-                        "name":         {"type": "string"},
-                        "headlines":    {"type": "array", "items": {"type": "string"}},
-                        "descriptions": {"type": "array", "items": {"type": "string"}},
-                        "angle":        {"type": "string"}
-                    },
-                    "required": ["name", "headlines", "descriptions", "angle"],
-                    "additionalProperties": False
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "variant_name":       {"type": "string"},
+                            "angle":              {"type": "string"},
+                            "headlines":          {"type": "array", "items": {"type": "string"}},
+                            "descriptions":       {"type": "array", "items": {"type": "string"}},
+                            "display_url_paths":  {"type": "array", "items": {"type": "string"}},
+                            "target_keywords":    {"type": "array", "items": {"type": "string"}},
+                            "bid_strategy":       {"type": "string"},
+                            "audience_targeting": {"type": "string"},
+                            "quality_score_estimate": {"type": "integer"},
+                            "cta_primary":        {"type": "string"}
+                        },
+                        "required": [
+                            "variant_name", "angle", "headlines", "descriptions",
+                            "display_url_paths", "target_keywords", "bid_strategy",
+                            "audience_targeting", "quality_score_estimate", "cta_primary"
+                        ],
+                        "additionalProperties": False
+                    }
                 },
-                "variant_b": {
-                    "type": "object",
-                    "properties": {
-                        "name":         {"type": "string"},
-                        "headlines":    {"type": "array", "items": {"type": "string"}},
-                        "descriptions": {"type": "array", "items": {"type": "string"}},
-                        "angle":        {"type": "string"}
-                    },
-                    "required": ["name", "headlines", "descriptions", "angle"],
-                    "additionalProperties": False
-                },
-                "variant_c": {
-                    "type": "object",
-                    "properties": {
-                        "name":         {"type": "string"},
-                        "headlines":    {"type": "array", "items": {"type": "string"}},
-                        "descriptions": {"type": "array", "items": {"type": "string"}},
-                        "angle":        {"type": "string"}
-                    },
-                    "required": ["name", "headlines", "descriptions", "angle"],
-                    "additionalProperties": False
-                },
-                "recommended_landing_page_focus": {"type": "string"},
-                "negative_keywords": {"type": "array", "items": {"type": "string"}}
+                "campaign_notes":  {"type": "string"},
+                "estimated_ctr":   {"type": "string"},
+                "negative_keywords": {"type": "array", "items": {"type": "string"}},
+                "budget_recommendation": {"type": "string"}
             },
-            "required": [
-                "target_keywords", "ad_group_name",
-                "variant_a", "variant_b", "variant_c",
-                "recommended_landing_page_focus", "negative_keywords"
-            ],
+            "required": ["variants", "campaign_notes", "estimated_ctr", "negative_keywords", "budget_recommendation"],
             "additionalProperties": False
         }
 
         result  = self._call_model(system_prompt, user_prompt, "google_ads", schema)
         content = result["content"]
 
-        headline = f"Google Ads — {persona.name} | {country.name} | {campaign.framework_focus}"
-        body     = f"Ad group: {content['ad_group_name']} | {len(content['target_keywords'])} target keywords | 3 A/B variants"
-
         return self._save_content(
             campaign_id=campaign_id,
             content_type="google_ads",
-            headline=headline,
-            body=body,
+            headline=f"Google Ads — {country.name} | {persona.name} (3 variants)",
+            body=f"CTR est: {content['estimated_ctr']} | {content['campaign_notes']}",
             json_output=content,
             usage=result["usage"]
         )
 
     # ─────────────────────────────────────────────
-    # LinkedIn Sponsored Content Ads
+    # LinkedIn Sponsored Content
     # ─────────────────────────────────────────────
     def generate_linkedin_ads(self, campaign_id) -> GeneratedContent:
+        """
+        Generate 3 LinkedIn Sponsored Content variants.
+        Designed to interrupt sustainability / CFO / compliance decision-makers.
+        """
         campaign, persona, country = self.build_context(campaign_id)
 
-        system_prompt = f"""
-You are the LinkedIn Ads Agent for Triple I — ESG & Carbon Reporting platform.
+        system_prompt = self._ads_system_prompt(campaign, persona, country)
 
-{self._audience_brief(persona.name, country.name, country.cluster)}
-Framework focus: {campaign.framework_focus}
-
-LinkedIn Sponsored Content rules:
-- Introductory text: 150 chars max (shown in feed)
-- Headline: 70 chars max
-- Description: 100 chars max
-- CTA button: must be one of [Learn More, Download, Sign Up, Request Demo, Contact Us]
-- Image suggestion: describe what the visual should show
-        """.strip()
-
-        user_prompt = """
+        user_prompt = f"""
 Generate 3 LinkedIn Sponsored Content ad variants for Triple I.
+Target: {persona.name} in {country.name}.
 
-Return JSON with:
-- audience_targeting: {{job_titles, industries, company_size, seniority}} (LinkedIn targeting parameters)
-- variant_a, variant_b, variant_c: each containing {{
-    name: variant label,
-    introductory_text: max 150 chars,
-    headline: max 70 chars,
-    description: max 100 chars,
-    cta_button: one of the allowed options,
-    image_suggestion: describe the ideal visual,
-    angle: what this variant tests
-  }}
-- budget_recommendation: daily budget range and bidding strategy suggestion
+LinkedIn Single Image Ad specs:
+- Introductory text: max 150 chars (shown above the image)
+- Headline: max 70 chars
+- Description: max 100 chars (shown below headline)
+- CTA button: choose from [Learn More / Register / Request Demo / Sign Up / Download]
+
+VARIANT A — Urgency/Fear:
+  Angle: CSRD reporting deadline is here — companies still on spreadsheets are exposed
+  Offer: Free ESRS Readiness Assessment
+  CTA button: Register
+
+VARIANT B — Fast-Track Sprint:
+  Angle: 6 weeks to a draft ESRS report. No IT team. No consultants.
+  Offer: Fast-Track Compliance Sprint (E1+S1)
+  CTA button: Learn More
+
+VARIANT C — Social Proof/Credibility:
+  Angle: Cambridge-validated. Award-winning EcoHub™. 80–90% cost reduction.
+  Offer: Request a live demo
+  CTA button: Request Demo
+
+For each variant provide:
+- audience_job_titles: 5 exact LinkedIn job titles to target
+- company_size_targeting: size range
+- interest_targeting: 3 LinkedIn interest categories
+- image_concept: brief description of ideal ad image/visual
+- ab_test_hypothesis: what this variant is testing vs. the others
+
+Return JSON with: variants (array of 3), targeting_notes, recommended_daily_budget_eur.
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "audience_targeting": {
-                    "type": "object",
-                    "properties": {
-                        "job_titles":    {"type": "array", "items": {"type": "string"}},
-                        "industries":    {"type": "array", "items": {"type": "string"}},
-                        "company_size":  {"type": "string"},
-                        "seniority":     {"type": "array", "items": {"type": "string"}}
-                    },
-                    "required": ["job_titles", "industries", "company_size", "seniority"],
-                    "additionalProperties": False
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "variant_name":            {"type": "string"},
+                            "angle":                   {"type": "string"},
+                            "introductory_text":       {"type": "string"},
+                            "headline":                {"type": "string"},
+                            "description":             {"type": "string"},
+                            "cta_button":              {"type": "string"},
+                            "offer":                   {"type": "string"},
+                            "audience_job_titles":     {"type": "array", "items": {"type": "string"}},
+                            "company_size_targeting":  {"type": "string"},
+                            "interest_targeting":      {"type": "array", "items": {"type": "string"}},
+                            "image_concept":           {"type": "string"},
+                            "ab_test_hypothesis":      {"type": "string"}
+                        },
+                        "required": [
+                            "variant_name", "angle", "introductory_text", "headline",
+                            "description", "cta_button", "offer", "audience_job_titles",
+                            "company_size_targeting", "interest_targeting",
+                            "image_concept", "ab_test_hypothesis"
+                        ],
+                        "additionalProperties": False
+                    }
                 },
-                "variant_a": {
-                    "type": "object",
-                    "properties": {
-                        "name":                {"type": "string"},
-                        "introductory_text":   {"type": "string"},
-                        "headline":            {"type": "string"},
-                        "description":         {"type": "string"},
-                        "cta_button":          {"type": "string"},
-                        "image_suggestion":    {"type": "string"},
-                        "angle":               {"type": "string"}
-                    },
-                    "required": ["name","introductory_text","headline","description","cta_button","image_suggestion","angle"],
-                    "additionalProperties": False
-                },
-                "variant_b": {
-                    "type": "object",
-                    "properties": {
-                        "name":                {"type": "string"},
-                        "introductory_text":   {"type": "string"},
-                        "headline":            {"type": "string"},
-                        "description":         {"type": "string"},
-                        "cta_button":          {"type": "string"},
-                        "image_suggestion":    {"type": "string"},
-                        "angle":               {"type": "string"}
-                    },
-                    "required": ["name","introductory_text","headline","description","cta_button","image_suggestion","angle"],
-                    "additionalProperties": False
-                },
-                "variant_c": {
-                    "type": "object",
-                    "properties": {
-                        "name":                {"type": "string"},
-                        "introductory_text":   {"type": "string"},
-                        "headline":            {"type": "string"},
-                        "description":         {"type": "string"},
-                        "cta_button":          {"type": "string"},
-                        "image_suggestion":    {"type": "string"},
-                        "angle":               {"type": "string"}
-                    },
-                    "required": ["name","introductory_text","headline","description","cta_button","image_suggestion","angle"],
-                    "additionalProperties": False
-                },
-                "budget_recommendation": {"type": "string"}
+                "targeting_notes":              {"type": "string"},
+                "recommended_daily_budget_eur": {"type": "string"},
+                "estimated_cpl_eur":            {"type": "string"},
+                "campaign_objective":           {"type": "string"}
             },
-            "required": ["audience_targeting", "variant_a", "variant_b", "variant_c", "budget_recommendation"],
+            "required": [
+                "variants", "targeting_notes",
+                "recommended_daily_budget_eur", "estimated_cpl_eur", "campaign_objective"
+            ],
             "additionalProperties": False
         }
 
         result  = self._call_model(system_prompt, user_prompt, "linkedin_ads", schema)
         content = result["content"]
 
-        headline = f"LinkedIn Ads — {persona.name} | {country.name} | {campaign.framework_focus}"
-        body     = f"3 ad variants | Targeting: {', '.join(content['audience_targeting']['job_titles'][:3])}"
-
         return self._save_content(
             campaign_id=campaign_id,
             content_type="linkedin_ads",
-            headline=headline,
-            body=body,
+            headline=f"LinkedIn Ads — {country.name} | {persona.name} (3 variants)",
+            body=f"CPL est: {content['estimated_cpl_eur']} | Budget: {content['recommended_daily_budget_eur']}/day",
             json_output=content,
             usage=result["usage"]
         )
