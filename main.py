@@ -34,10 +34,33 @@ app.add_middleware(
 def create_tables():
     Base.metadata.create_all(bind=engine)
 
-# ── Health check — required by Railway ──────────────────────────
+# ── Health check ─────────────────────────────────────────────────
 @app.get("/health", include_in_schema=False)
 def health():
     return JSONResponse({"status": "ok", "version": "4.0.0"})
+
+# ── Debug endpoint — DELETE THIS AFTER CONFIRMING DEPLOY ─────────
+@app.get("/debug/version", include_in_schema=False)
+def debug_version():
+    """Temporary: confirms which code version is actually running on Railway."""
+    import inspect
+    from app.agents.autonomous_orchestrator import AutonomousOrchestrator
+    methods = [m for m in dir(AutonomousOrchestrator) if not m.startswith("_")]
+    has_auto_generate = hasattr(AutonomousOrchestrator, "auto_generate_campaign_goals")
+    has_triple_i_context = False
+    try:
+        from app.agents import triple_i_context
+        has_triple_i_context = True
+    except ImportError:
+        pass
+    return JSONResponse({
+        "version": "4.0.0",
+        "orchestrator_methods": methods,
+        "has_auto_generate_campaign_goals": has_auto_generate,
+        "has_triple_i_context": has_triple_i_context,
+        "openai_key_set": bool(os.environ.get("OPENAI_API_KEY")),
+        "database_url_set": bool(os.environ.get("DATABASE_URL")),
+    })
 
 app.include_router(persona.router)
 app.include_router(country.router)
