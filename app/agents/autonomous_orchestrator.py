@@ -1,300 +1,347 @@
 """
-autonomous_orchestrator.py
-==========================
-Autonomous Loop Coordinator for Triple I's marketing system.
-
-The loop is designed around ONE goal: sign a Fast-Track Compliance Sprint
-pilot (€5K–€15K) within 6 weeks in Cluster A European markets.
-
-Loop modes:
-- full:          All 13 steps — weekly autonomous run
-- generate_only: Strategy + Content + Ads + Distribution — first run
-- analyze_only:  Analytics + A/B test — quick performance check
-- optimize_only: Analytics + Budget — budget reallocation only
-- fear_blitz:    NEW — rapid fear-hook content for immediate market entry
+autonomous_orchestrator.py — Triple I v4.0
+Coordinates all 8 agents. Method names preserved to match generate.py API routes.
 """
 
 import json
-from datetime import datetime
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.agents.base_agent import BaseAgent
-from app.agents.triple_i_context import get_master_context, SALES_STRATEGY, MARKETS
+from app.agents.cmo_agent import CMOAgent
+from app.agents.content_agent import ContentAgent
+from app.agents.seo_agent import SEOAgent
+from app.agents.ads_agent import AdsAgent
+from app.agents.research_agent import ResearchAgent
+from app.agents.analytics_agent import AnalyticsAgent
+from app.agents.budget_agent import BudgetAgent
+from app.agents.distribution_agent import DistributionAgent
 from app.models.generated_content import GeneratedContent
-from app import log_bus
 
 
 class AutonomousOrchestrator(BaseAgent):
     """
-    🔄 Autonomous Loop Orchestrator
-    Coordinates all 8 agents in sequence to execute the Fear → Pilot → Close
-    sales motion continuously and self-improve each cycle.
+    🏗 Autonomous Marketing Orchestrator — The CMO Brain on Autopilot
+
+    Runs the full autonomous loop:
+    Goal → Research → Strategy → Generate → Distribute → Measure → Auto-adjust
+
+    Loop modes:
+      full          — All 9 phases (weekly run)
+      generate_only — Strategy + Content + Ads + Distribution (first run)
+      analyze_only  — Analytics + A/B test (mid-week check)
+      optimize_only — Analytics + Budget (budget reallocation)
+      fear_blitz    — CMO brief + LinkedIn + Twitter + Ads (rapid market entry)
     """
 
     AGENT_TYPE = "orchestrator"
 
-    def run_autonomous_loop(self, campaign_id: str, loop_mode: str = "full") -> dict:
+    def __init__(self, db: Session):
+        super().__init__(db)
+        self.cmo          = CMOAgent(db)
+        self.content      = ContentAgent(db)
+        self.seo          = SEOAgent(db)
+        self.ads          = AdsAgent(db)
+        self.research     = ResearchAgent(db)
+        self.analytics    = AnalyticsAgent(db)
+        self.budget       = BudgetAgent(db)
+        self.distribution = DistributionAgent(db)
+
+    # ─────────────────────────────────────────────
+    # Main loop
+    # ─────────────────────────────────────────────
+    def run_autonomous_loop(
+        self,
+        campaign_id: str,
+        loop_mode: str = "full",
+        on_step: Optional[callable] = None
+    ) -> dict:
         """
-        Execute the autonomous marketing loop.
-
-        Loop modes:
-          full          — All 13 steps. Run weekly.
-          generate_only — Steps 1–6. First-run campaign launch.
-          analyze_only  — Steps 7–9. Mid-week performance check.
-          optimize_only — Steps 7 + 9. Budget reallocation only.
-          fear_blitz    — Steps 1, 3, 4, 5. Rapid fear-hook content push for fast market entry.
+        Execute the full autonomous marketing loop for a campaign.
+        All agent method names match what's defined in each agent file.
         """
-        from app.agents.cmo_agent import CMOAgent
-        from app.agents.research_agent import ResearchAgent
-        from app.agents.seo_agent import SEOAgent
-        from app.agents.content_agent import ContentAgent
-        from app.agents.ads_agent import AdsAgent
-        from app.agents.distribution_agent import DistributionAgent
-        from app.agents.analytics_agent import AnalyticsAgent
-        from app.agents.budget_agent import BudgetAgent
 
-        campaign, persona, country = self.build_context(campaign_id)
-
-        results = {}
-        errors  = {}
-        log     = []
-
-        def step(name: str, fn):
-            """Execute a single loop step with error capture and logging."""
-            log_bus.emit("🔄", f"Starting: {name}", "info")
+        def step(name, fn):
             try:
                 result = fn()
-                results[name] = str(result.id) if hasattr(result, "id") else str(result)
-                log_bus.emit("✅", f"Completed: {name}", "success")
-                log.append({"step": name, "status": "ok", "id": results[name]})
+                if on_step:
+                    on_step(name, "success", str(result.id) if result else None)
+                return {"status": "success", "id": str(result.id) if result else None}
             except Exception as e:
-                errors[name] = str(e)
-                log_bus.emit("❌", f"Failed: {name} — {str(e)}", "error")
-                log.append({"step": name, "status": "error", "error": str(e)})
+                if on_step:
+                    on_step(name, "error", str(e))
+                return {"status": "error", "error": str(e)}
 
-        # ─── Define all steps ────────────────────────────────────────
-        cmo        = CMOAgent(self.db)
-        research   = ResearchAgent(self.db)
-        seo        = SEOAgent(self.db)
-        content    = ContentAgent(self.db)
-        ads        = AdsAgent(self.db)
-        distrib    = DistributionAgent(self.db)
-        analytics  = AnalyticsAgent(self.db)
-        budget     = BudgetAgent(self.db)
+        results        = {}
+        steps_executed = []
 
-        all_steps = {
-            # Step 1 — CMO creates fear-first campaign brief
-            "1_cmo_brief": lambda: cmo.create_campaign_brief(campaign_id),
+        # ── PHASE 1: CMO STRATEGY BRIEF ────────────────────────────────
+        if loop_mode in ("full", "generate_only", "fear_blitz"):
+            results["cmo_brief"] = step(
+                "cmo_brief",
+                lambda: self.cmo.create_campaign_brief(campaign_id)
+            )
+            steps_executed.append("cmo_brief")
 
-            # Step 2 — Research: find regulatory urgency + competitive gaps
-            "2_regulatory_briefing": lambda: research.regulatory_briefing(campaign_id),
+        # ── PHASE 2: RESEARCH ──────────────────────────────────────────
+        if loop_mode in ("full", "generate_only"):
+            # competitor_analysis() — matches research_agent.py v4 method name
+            # Falls back gracefully if method name differs
+            results["competitor_analysis"] = step(
+                "competitor_analysis",
+                lambda: (
+                    self.research.competitor_analysis(campaign_id)
+                    if hasattr(self.research, "competitor_analysis")
+                    else self.research.analyze_competitors(campaign_id)
+                )
+            )
+            steps_executed.append("competitor_analysis")
 
-            # Step 3 — SEO: capture CSRD fear-stage and conversion-stage searches
-            "3_seo_keywords": lambda: seo.generate_keyword_cluster(campaign_id),
+            results["regulatory_briefing"] = step(
+                "regulatory_briefing",
+                lambda: self.research.regulatory_briefing(campaign_id)
+            )
+            steps_executed.append("regulatory_briefing")
 
-            # Step 4 — Content: fear-first LinkedIn post
-            "4_linkedin": lambda: content.generate_linkedin(campaign_id),
+        # ── PHASE 3: SEO ───────────────────────────────────────────────
+        if loop_mode in ("full", "generate_only"):
+            results["seo_keywords"] = step(
+                "seo_keywords",
+                lambda: self.seo.generate_keyword_cluster(campaign_id)
+            )
+            steps_executed.append("seo_keywords")
 
-            # Step 5 — Content: Twitter/X fear thread
-            "5_twitter": lambda: content.generate_twitter(campaign_id),
+        # ── PHASE 4: CONTENT ───────────────────────────────────────────
+        if loop_mode in ("full", "generate_only", "fear_blitz"):
+            results["linkedin"] = step(
+                "linkedin",
+                lambda: self.content.generate_linkedin(campaign_id)
+            )
+            steps_executed.append("linkedin")
 
-            # Step 6 — Ads: Google + LinkedIn with A/B variants
-            "6_google_ads":   lambda: ads.generate_google_ads(campaign_id),
-            "7_linkedin_ads": lambda: ads.generate_linkedin_ads(campaign_id),
+            # Blog expands from LinkedIn — only if LinkedIn succeeded
+            if results.get("linkedin", {}).get("status") == "success":
+                linkedin_id = results["linkedin"]["id"]
+                results["blog"] = step(
+                    "blog",
+                    lambda: self.content.generate_blog_from_linkedin(linkedin_id)
+                )
+                steps_executed.append("blog")
 
-            # Step 7 (blog depends on LinkedIn — run after step 4 result)
-            "8_blog": None,  # set dynamically below
+            # Twitter — method name: generate_twitter_thread OR generate_twitter
+            results["twitter"] = step(
+                "twitter",
+                lambda: (
+                    self.content.generate_twitter_thread(campaign_id)
+                    if hasattr(self.content, "generate_twitter_thread")
+                    else self.content.generate_twitter(campaign_id)
+                )
+            )
+            steps_executed.append("twitter")
 
-            # Step 8 — Distribution: 6-week sales motion deployment plan
-            "9_distribution": lambda: distrib.create_distribution_plan(campaign_id),
+        # ── PHASE 5: ADS ───────────────────────────────────────────────
+        if loop_mode in ("full", "generate_only", "fear_blitz"):
+            results["google_ads"] = step(
+                "google_ads",
+                lambda: self.ads.generate_google_ads(campaign_id)
+            )
+            steps_executed.append("google_ads")
 
-            # Step 9 — Competitor analysis
-            "10_competitor_analysis": lambda: research.competitor_analysis(campaign_id),
+            results["linkedin_ads"] = step(
+                "linkedin_ads",
+                lambda: self.ads.generate_linkedin_ads(campaign_id)
+            )
+            steps_executed.append("linkedin_ads")
 
-            # Step 10 — Analytics: funnel performance + pipeline forecast
-            "11_analytics": lambda: analytics.analyze_performance(campaign_id),
+        # ── PHASE 6: DISTRIBUTION ──────────────────────────────────────
+        if loop_mode in ("full", "generate_only"):
+            results["distribution_plan"] = step(
+                "distribution_plan",
+                lambda: self.distribution.create_distribution_plan(campaign_id)
+            )
+            steps_executed.append("distribution_plan")
 
-            # Step 11 — A/B test analysis: which fear hooks win?
-            "12_ab_test": lambda: analytics.analyze_ab_test(campaign_id),
+        # ── PHASE 7 & 8: ANALYTICS ─────────────────────────────────────
+        if loop_mode in ("full", "analyze_only", "optimize_only"):
+            # analyze_performance() — v4 method name; falls back to v3 name
+            results["analytics_report"] = step(
+                "analytics_report",
+                lambda: (
+                    self.analytics.analyze_performance(campaign_id)
+                    if hasattr(self.analytics, "analyze_performance")
+                    else self.analytics.analyze_campaign_performance(campaign_id)
+                )
+            )
+            steps_executed.append("analytics_report")
 
-            # Step 12 — Budget: optimise spend toward pilot conversions
-            "13_budget": lambda: budget.optimize_budget(campaign_id),
-        }
+            results["ab_test"] = step(
+                "ab_test",
+                lambda: (
+                    self.analytics.analyze_ab_test(campaign_id)
+                    if hasattr(self.analytics, "analyze_ab_test")
+                    else self.analytics.run_ab_test_analysis(campaign_id)
+                )
+            )
+            steps_executed.append("ab_test")
 
-        # ─── Execute by mode ─────────────────────────────────────────
-        log_bus.emit(
-            "🚀",
-            f"Triple I Autonomous Loop [{loop_mode.upper()}] — {campaign.name} | {country.name}",
-            "info"
-        )
-        log_bus.emit(
-            "🎯",
-            f"Goal: Fear → ESRS Assessment → Fast-Track Sprint pilot in 6 weeks",
-            "info"
-        )
+        # ── PHASE 9: BUDGET ────────────────────────────────────────────
+        if loop_mode in ("full", "optimize_only"):
+            results["budget_optimization"] = step(
+                "budget_optimization",
+                lambda: self.budget.optimize_budget(campaign_id)
+            )
+            steps_executed.append("budget_optimization")
 
-        if loop_mode == "full":
-            active = [
-                "1_cmo_brief", "2_regulatory_briefing", "3_seo_keywords",
-                "4_linkedin", "5_twitter", "6_google_ads", "7_linkedin_ads",
-                "9_distribution", "10_competitor_analysis",
-                "11_analytics", "12_ab_test", "13_budget"
-            ]
-        elif loop_mode == "generate_only":
-            active = [
-                "1_cmo_brief", "3_seo_keywords",
-                "4_linkedin", "5_twitter", "6_google_ads", "7_linkedin_ads",
-                "9_distribution"
-            ]
-        elif loop_mode == "analyze_only":
-            active = ["11_analytics", "12_ab_test"]
+        # ── LOOP SYNTHESIS ─────────────────────────────────────────────
+        loop_summary = self._synthesize_loop(campaign_id, results, steps_executed)
 
-        elif loop_mode == "optimize_only":
-            active = ["11_analytics", "13_budget"]
-
-        elif loop_mode == "fear_blitz":
-            # Fastest path to market: CMO brief → LinkedIn → Twitter → Ads
-            # Use this for immediate Cluster A entry
-            active = [
-                "1_cmo_brief", "4_linkedin", "5_twitter",
-                "6_google_ads", "7_linkedin_ads"
-            ]
-            log_bus.emit("⚡", "FEAR BLITZ MODE — rapid content push for fast market entry", "info")
-
-        else:
-            active = ["1_cmo_brief"]  # fallback
-
-        # Execute active steps
-        for step_name in active:
-            fn = all_steps.get(step_name)
-            if fn:
-                step(step_name, fn)
-
-        # Blog depends on LinkedIn completing successfully
-        if "4_linkedin" in active and "4_linkedin" in results:
-            linkedin_id = results["4_linkedin"]
-            step("8_blog", lambda: content.generate_blog_from_linkedin(linkedin_id))
-
-        # ─── CMO synthesis ───────────────────────────────────────────
-        synthesis = self._synthesize_loop(
-            campaign_id=campaign_id,
-            campaign_name=campaign.name,
-            persona=persona.name,
-            country=country.name,
-            loop_mode=loop_mode,
-            results=results,
-            errors=errors,
-            cmo=cmo
-        )
-
-        log_bus.emit(
-            "🏁",
-            f"Loop complete — {len(results)} steps succeeded, {len(errors)} errors",
-            "success" if not errors else "warning"
-        )
+        successes = sum(1 for v in results.values() if isinstance(v, dict) and v.get("status") == "success")
+        errors    = sum(1 for v in results.values() if isinstance(v, dict) and v.get("status") == "error")
 
         return {
-            "campaign_id":   campaign_id,
-            "campaign_name": campaign.name,
-            "loop_mode":     loop_mode,
-            "country":       country.name,
-            "persona":       persona.name,
-            "completed_at":  datetime.utcnow().isoformat(),
-            "steps_ok":      len(results),
-            "steps_failed":  len(errors),
-            "generated":     results,
-            "errors":        errors,
-            "synthesis":     synthesis,
-            "log":           log
+            "campaign_id":            campaign_id,
+            "loop_mode":              loop_mode,
+            "steps_executed":         steps_executed,
+            "results":                results,
+            "successes":              successes,
+            "errors":                 errors,
+            "loop_summary":           loop_summary,
+            "next_loop_recommended":  loop_summary.get("next_loop_in_days", 7)
         }
 
-    def _synthesize_loop(self, campaign_id, campaign_name, persona, country,
-                         loop_mode, results, errors, cmo) -> str:
-        """Have the CMO synthesise the loop results and recommend next cycle priorities."""
-        synthesis_prompt = f"""
-The autonomous marketing loop just completed for:
-Campaign: {campaign_name}
-Country: {country}
-Persona: {persona}
-Mode: {loop_mode}
-
-Steps completed: {list(results.keys())}
-Errors: {list(errors.keys()) if errors else 'None'}
-
-As the CMO for Triple I, provide a 3-sentence synthesis:
-1. What was achieved in this loop (fear-hook content created, pipeline actions taken)
-2. The #1 priority for the next loop cycle to advance toward a Fast-Track Sprint pilot
-3. Any urgent action the sales team should take THIS WEEK based on what was generated
-
-Keep it tactical, brief, and focused on closing a pilot within 6 weeks.
-        """.strip()
-
+    # ─────────────────────────────────────────────
+    # Loop synthesis (CMO post-loop report)
+    # ─────────────────────────────────────────────
+    def _synthesize_loop(self, campaign_id: str, results: dict, steps: list) -> dict:
+        """CMO synthesizes loop results into strategic insights for next cycle."""
         try:
-            result = cmo.chat(synthesis_prompt)
-            return result
-        except Exception as e:
-            return f"Synthesis unavailable: {str(e)}"
+            context_parts = {
+                "steps_run":    steps,
+                "successes":    [k for k, v in results.items() if isinstance(v, dict) and v.get("status") == "success"],
+                "errors":       [k for k, v in results.items() if isinstance(v, dict) and v.get("status") == "error"],
+                "error_details":{k: v.get("error") for k, v in results.items() if isinstance(v, dict) and v.get("status") == "error"}
+            }
 
-    def generate_goals(self, persona_id: str, country_id: str) -> dict:
+            system_prompt = """
+You are the CMO for Triple I — an AI-powered ESG & Carbon Reporting B2B SaaS.
+You just ran an autonomous marketing loop. Synthesize what happened and define next steps.
+Focus on: Fear → ESRS Assessment → Fast-Track Compliance Sprint pipeline.
+Be concise, strategic, and focused on what needs to happen next.
+            """.strip()
+
+            user_prompt = f"""
+Synthesize this autonomous marketing loop:
+{json.dumps(context_parts)}
+
+Provide a loop summary with:
+1. executive_summary: 2-3 sentence loop overview
+2. top_wins: array of 3 key wins from this loop
+3. key_blockers: array of main issues to resolve
+4. strategy_adjustments: array of strategy changes for next cycle
+5. next_loop_in_days: integer (1, 3, or 7)
+6. next_loop_priority: single most important thing to do next cycle
+7. loop_health: "excellent" | "good" | "needs_attention" | "critical"
+            """.strip()
+
+            schema = {
+                "type": "object",
+                "properties": {
+                    "executive_summary":    {"type": "string"},
+                    "top_wins":             {"type": "array", "items": {"type": "string"}},
+                    "key_blockers":         {"type": "array", "items": {"type": "string"}},
+                    "strategy_adjustments": {"type": "array", "items": {"type": "string"}},
+                    "next_loop_in_days":    {"type": "integer"},
+                    "next_loop_priority":   {"type": "string"},
+                    "loop_health":          {"type": "string"}
+                },
+                "required": [
+                    "executive_summary", "top_wins", "key_blockers",
+                    "strategy_adjustments", "next_loop_in_days",
+                    "next_loop_priority", "loop_health"
+                ],
+                "additionalProperties": False
+            }
+
+            result = self._call_model(system_prompt, user_prompt, "loop_summary", schema)
+            return result["content"]
+
+        except Exception as e:
+            return {
+                "executive_summary":    f"Loop completed with {len(steps)} steps.",
+                "top_wins":             ["Content generated", "Pipeline executed"],
+                "key_blockers":         [str(e)],
+                "strategy_adjustments": ["Review errors and re-run"],
+                "next_loop_in_days":    7,
+                "next_loop_priority":   "Fix errors and re-run full loop",
+                "loop_health":          "needs_attention"
+            }
+
+    # ─────────────────────────────────────────────
+    # AI Goal Generator
+    # Called by: POST /generate/autonomous/generate-goals
+    # ─────────────────────────────────────────────
+    def auto_generate_campaign_goals(self, persona_id: str, country_id: str) -> dict:
         """
-        AI-generated campaign goals using CMO strategy.
-        Returns 3 goal options mapped to the Fast-Track Sprint sales motion.
+        CMO autonomously generates campaign goals based on ICP + country.
+        Method name matches the API route in generate.py — do not rename.
         """
         from app.models.persona import Persona
         from app.models.country import Country
-        from app.agents.cmo_agent import CMOAgent
 
         persona = self.db.query(Persona).filter(Persona.id == persona_id).first()
         country = self.db.query(Country).filter(Country.id == country_id).first()
 
         if not persona or not country:
-            raise ValueError("Persona or country not found")
+            raise ValueError("Invalid persona or country ID")
 
-        system_prompt = f"""
-You are the CMO for Triple I.
-
-{get_master_context()}
-
-Generate 3 campaign goal options. Each goal must:
-1. Be directly tied to the Fast-Track Compliance Sprint (E1+S1, 6–8 weeks, €5K–€15K)
-2. Include a specific target metric (e.g. "5 ESRS Assessment completions per week")
-3. Be achievable within 6 weeks given {country.name} market dynamics
-4. Map to one of: awareness (fear stage), lead-gen (assessment stage), or conversion (sprint stage)
+        system_prompt = """
+You are the CMO of Triple I — an AI-powered ESG & Carbon Reporting B2B SaaS.
+You autonomously define campaign goals aligned to the Fear → ESRS Assessment →
+Fast-Track Compliance Sprint (E1+S1, 6–8 weeks, €5K–€15K) sales motion.
+Every goal must be SMART and tied to pipeline velocity.
         """.strip()
 
         user_prompt = f"""
-Generate 3 smart campaign goals for:
-Persona: {persona.name} ({', '.join(persona.pains[:2]) if persona.pains else 'compliance-driven'})
-Country: {country.name} (Cluster: {country.cluster})
-Context: {country.notes}
+Generate autonomous campaign goals for:
+Persona: {persona.name}
+Pains: {json.dumps(persona.pains)}
+Motivations: {json.dumps(persona.motivations)}
+Country: {country.name}
+Cluster: {country.cluster}
+Country Notes: {country.notes}
 
-Return JSON: goals (array of 3 objects with: goal_title, description, primary_metric, funnel_stage, timeline)
+Output:
+1. campaign_name: compelling, urgency-driven campaign name
+2. primary_goal: main SMART goal tied to pilot pipeline
+3. secondary_goals: array of 2 supporting goals
+4. framework_focus: "Carbon" | "Interoperability" | "Full ESG"
+5. recommended_channel: "LinkedIn" | "Google" | "Both"
+6. budget_tier: "starter" | "growth" | "scale"
+7. urgency_level: "high" | "medium" | "low" based on CSRD regulatory pressure
+8. rationale: why these goals for this persona/country right now
         """.strip()
 
         schema = {
             "type": "object",
             "properties": {
-                "goals": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "goal_title":       {"type": "string"},
-                            "description":      {"type": "string"},
-                            "primary_metric":   {"type": "string"},
-                            "funnel_stage":     {"type": "string"},
-                            "timeline":         {"type": "string"}
-                        },
-                        "required": ["goal_title", "description", "primary_metric",
-                                     "funnel_stage", "timeline"],
-                        "additionalProperties": False
-                    }
-                }
+                "campaign_name":       {"type": "string"},
+                "primary_goal":        {"type": "string"},
+                "secondary_goals":     {"type": "array", "items": {"type": "string"}},
+                "framework_focus":     {"type": "string"},
+                "recommended_channel": {"type": "string"},
+                "budget_tier":         {"type": "string"},
+                "urgency_level":       {"type": "string"},
+                "rationale":           {"type": "string"}
             },
-            "required": ["goals"],
+            "required": [
+                "campaign_name", "primary_goal", "secondary_goals",
+                "framework_focus", "recommended_channel", "budget_tier",
+                "urgency_level", "rationale"
+            ],
             "additionalProperties": False
         }
 
-        result = CMOAgent(self.db)._call_model(
-            system_prompt, user_prompt, "goal_generator", schema
-        )
+        result = self._call_model(system_prompt, user_prompt, "campaign_goals", schema)
         return result["content"]
+
+    # Alias for backwards compatibility with any code using the v4 name
+    generate_goals = auto_generate_campaign_goals
