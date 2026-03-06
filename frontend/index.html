@@ -2240,7 +2240,7 @@ const API = (window.location.protocol === 'file:') ? 'http://localhost:8000' : '
 let loopRunning = false;
 let approveTargetId = null;
 let loopCount = parseInt(localStorage.getItem('loopCount') || '0');
-
+let _pendingGoals = null;   
 // ═══════════════════════════════════════════════════════════════════════════
 // CORE HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2458,7 +2458,7 @@ async function loadSetupData() {
       api('/countries/')
     ]);
 
-    // Populate campaign creation selects
+    // Populate persona select
     ['camp-persona'].forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
@@ -2470,6 +2470,7 @@ async function loadSetupData() {
       });
     });
 
+    // Populate country select
     ['camp-country'].forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
@@ -2481,8 +2482,41 @@ async function loadSetupData() {
       });
     });
 
+    // ── Apply pending goals AFTER selects are populated ───────────────────
+    // This is the core fix: values are set here, not in a setTimeout,
+    // so they can never be wiped by the async data load.
+    if (_pendingGoals) {
+      const { name, framework, channel, goal } = _pendingGoals;
+      _pendingGoals = null;  // clear immediately
+
+      const n  = document.getElementById('camp-name');
+      const f  = document.getElementById('camp-framework');
+      const ch = document.getElementById('camp-channel');
+      const g  = document.getElementById('camp-goal');
+
+      if (n)  n.value  = name;
+      if (f)  f.value  = framework;
+      if (ch) ch.value = channel;
+      if (g)  g.value  = goal;
+
+      toast('Campaign form pre-filled! Select a Persona + Country, then create.');
+
+      // Highlight the card so the user sees it was filled
+      const card = n?.closest('.card');
+      if (card) {
+        card.style.border = '1px solid var(--gglow)';
+        card.style.boxShadow = '0 0 16px var(--gdim)';
+        setTimeout(() => {
+          card.style.border = '';
+          card.style.boxShadow = '';
+        }, 3500);
+      }
+    }
+
     // Campaigns list
     const el = document.getElementById('campaigns-list');
+    if (!el) return;
+
     if (!campaigns.length) {
       el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No campaigns yet. Create one above.</div></div>';
       return;
@@ -2499,17 +2533,18 @@ async function loadSetupData() {
               <td style="font-weight:600;color:var(--white)">${c.name}</td>
               <td><span class="tag tb">${c.framework_focus || '—'}</span></td>
               <td><span class="tag tg">${c.channel || '—'}</span></td>
-              <td><span class="tag ${c.status === 'active' ? 'tg' : 'tm'}">${c.status || 'active'}</span></td>
-              <td style="color:var(--text2)">${new Date(c.created_at).toLocaleDateString()}</td>
+              <td><span class="tag ${c.status === 'active' ? 'tg' : 'tm'}">${c.status}</span></td>
+              <td style="color:var(--text3)">${new Date(c.created_at).toLocaleDateString()}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
   } catch (e) {
-    document.getElementById('campaigns-list').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading data: ${e.message}</div></div>`;
+    console.warn('loadSetupData error:', e.message);
   }
 }
+
 
 async function loadLibrary() {
   const typeFilter    = document.getElementById('lib-filter-type')?.value    || '';
@@ -2891,18 +2926,10 @@ async function autoGenerateGoals() {
 }
 
 function fillCampaignForm(name, framework, channel, goal) {
+  // Store goals — loadSetupData() will apply them after selects are ready
+  _pendingGoals = { name, framework, channel, goal };
   nav('setup');
-  setTimeout(() => {
-    const n = document.getElementById('camp-name');
-    const f = document.getElementById('camp-framework');
-    const c = document.getElementById('camp-channel');
-    const g = document.getElementById('camp-goal');
-    if (n) n.value = name;
-    if (f) f.value = framework;
-    if (c) c.value = channel;
-    if (g) g.value = goal;
-    toast('Campaign form pre-filled!');
-  }, 200);
+  // No setTimeout needed — values are applied inside loadSetupData() below
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
